@@ -1,0 +1,14 @@
+{
+  "name": "quizzi-app",
+  "version": "1.0.0",
+  "description": "Web thi trắc nghiệm với Node.js, Express, MySQL, TypeScript (BE) và React, MUI (FE)",
+  "scripts": {
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm start",
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install"
+  },
+  "keywords": ["quiz", "exam", "education"],
+  "author": "",
+  "license": "ISC"
+}
+
