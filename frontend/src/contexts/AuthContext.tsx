@@ -10,18 +10,22 @@
  * - Các hàm: login, register, logout
  */
 
-import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useRef } from 'react';
 import { User } from '../types/user.types';
 import { API_ENDPOINTS } from '../constants/api';
+import { isTokenExpired, getTokenTimeRemaining } from '../utils/tokenUtils';
 
 // Định nghĩa kiểu dữ liệu cho Context
 // Interface này mô tả những gì có sẵn trong AuthContext
 interface AuthContextType {
   user: User | null; // Thông tin user hiện tại (null nếu chưa đăng nhập)
-  token: string | null; // JWT token để xác thực (null nếu chưa đăng nhập)
+  accessToken: string | null; // Access token để xác thực (null nếu chưa đăng nhập)
+  refreshToken: string | null; // Refresh token để lấy lại access token
+  isLoading: boolean; // Đang load từ localStorage
   login: (email: string, password: string) => Promise<void>; // Hàm đăng nhập
   register: (userData: RegisterData) => Promise<void>; // Hàm đăng ký
   logout: () => void; // Hàm đăng xuất
+  refreshAccessToken: () => Promise<boolean>; // Hàm refresh access token
 }
 
 // Định nghĩa kiểu dữ liệu cho form đăng ký
@@ -55,23 +59,160 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // user: Thông tin user hiện tại (null nếu chưa đăng nhập)
   const [user, setUser] = useState<User | null>(null);
   
-  // token: JWT token để xác thực API requests
-  const [token, setToken] = useState<string | null>(null);
+  // accessToken: JWT access token để xác thực API requests (ngắn hạn)
+  const [accessToken, setAccessToken] = useState<string | null>(null);
+  
+  // refreshToken: JWT refresh token để lấy lại access token (dài hạn)
+  const [refreshToken, setRefreshToken] = useState<string | null>(null);
+  
+  // Ref để tránh refresh token nhiều lần cùng lúc
+  const isRefreshing = useRef(false);
+  const refreshPromise = useRef<Promise<boolean> | null>(null);
+  
+  // Loading state để biết đang load từ localStorage
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   // useEffect: Hook để thực hiện side effects (tác dụng phụ)
   // Chạy 1 lần khi component được mount (render lần đầu)
   useEffect(() => {
-    // Kiểm tra xem có thông tin đăng nhập đã lưu trong localStorage không
-    // localStorage: Lưu trữ dữ liệu trong trình duyệt, không mất khi refresh trang
-    const savedUser = localStorage.getItem('user');
-    const savedToken = localStorage.getItem('token');
-    
-    // Nếu có thông tin đã lưu, khôi phục lại state
-    if (savedUser && savedToken) {
-      setUser(JSON.parse(savedUser)); // Parse JSON string thành object
-      setToken(savedToken);
-    }
+    const initializeAuth = async () => {
+      try {
+        // Kiểm tra xem có thông tin đăng nhập đã lưu trong localStorage không
+        // localStorage: Lưu trữ dữ liệu trong trình duyệt, không mất khi refresh trang
+        const savedUser = localStorage.getItem('user');
+        const savedAccessToken = localStorage.getItem('accessToken');
+        const savedRefreshToken = localStorage.getItem('refreshToken');
+        
+        // Nếu có thông tin đã lưu, khôi phục lại state
+        if (savedUser && savedAccessToken && savedRefreshToken) {
+          setUser(JSON.parse(savedUser)); // Parse JSON string thành object
+          setAccessToken(savedAccessToken);
+          setRefreshToken(savedRefreshToken);
+          
+          // Kiểm tra access token có hết hạn không, nếu có thì refresh ngay
+          if (isTokenExpired(savedAccessToken)) {
+            // Token đã hết hạn, refresh ngay
+            const currentRefreshToken = savedRefreshToken;
+            try {
+              const response = await fetch(API_ENDPOINTS.REFRESH, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ refreshToken: currentRefreshToken }),
+              });
+
+              const data = await response.json();
+              if (response.ok && data.success) {
+                const newAccessToken = data.data.accessToken;
+                setAccessToken(newAccessToken);
+                localStorage.setItem('accessToken', newAccessToken);
+              } else {
+                // Refresh token hết hạn, xóa hết
+                setUser(null);
+                setAccessToken(null);
+                setRefreshToken(null);
+                localStorage.removeItem('user');
+                localStorage.removeItem('accessToken');
+                localStorage.removeItem('refreshToken');
+              }
+            } catch (error) {
+              console.error('Error refreshing token on init:', error);
+              // Nếu refresh thất bại, giữ nguyên tokens (có thể là lỗi network)
+            }
+          }
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initializeAuth();
   }, []); // Mảng rỗng [] nghĩa là chỉ chạy 1 lần khi component mount
+
+  /**
+   * Refresh access token
+   */
+  const refreshAccessToken = async (): Promise<boolean> => {
+    // Nếu đang refresh rồi, đợi promise hiện tại
+    if (isRefreshing.current && refreshPromise.current) {
+      return refreshPromise.current;
+    }
+
+    isRefreshing.current = true;
+
+    refreshPromise.current = (async () => {
+      try {
+        const currentRefreshToken = refreshToken || localStorage.getItem('refreshToken');
+        
+        if (!currentRefreshToken) {
+          throw new Error('Không có refresh token');
+        }
+
+        const response = await fetch(API_ENDPOINTS.REFRESH, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ refreshToken: currentRefreshToken }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          throw new Error(data.message || 'Refresh token thất bại');
+        }
+
+        // Cập nhật access token mới
+        const newAccessToken = data.data.accessToken;
+        setAccessToken(newAccessToken);
+        localStorage.setItem('accessToken', newAccessToken);
+
+        return true;
+      } catch (error: any) {
+        console.error('Refresh token error:', error);
+        // Nếu refresh token hết hạn, logout
+        logout();
+        return false;
+      } finally {
+        isRefreshing.current = false;
+        refreshPromise.current = null;
+      }
+    })();
+
+    return refreshPromise.current;
+  };
+
+  // Tự động refresh token khi sắp hết hạn
+  useEffect(() => {
+    if (!accessToken) return;
+
+    let timer: NodeJS.Timeout | null = null;
+
+    const checkAndRefresh = async () => {
+      if (isTokenExpired(accessToken!)) {
+        // Token đã hết hạn hoặc sắp hết hạn, refresh ngay
+        await refreshAccessToken();
+      } else {
+        // Token còn hạn, đặt timer để refresh trước khi hết hạn
+        const timeRemaining = getTokenTimeRemaining(accessToken!);
+        if (timeRemaining > 0) {
+          timer = setTimeout(() => {
+            refreshAccessToken();
+          }, timeRemaining);
+        }
+      }
+    };
+
+    checkAndRefresh();
+
+    return () => {
+      if (timer) {
+        clearTimeout(timer);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [accessToken]);
 
   /**
    * Hàm đăng nhập
@@ -111,13 +252,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw new Error(data.message || 'Đăng nhập thất bại');
       }
 
-      // Lưu thông tin user và token vào state
+      // Lưu thông tin user và tokens vào state
       setUser(data.data.user);
-      setToken(data.data.token);
+      setAccessToken(data.data.accessToken);
+      setRefreshToken(data.data.refreshToken);
       
       // Lưu vào localStorage để giữ đăng nhập khi refresh trang
       localStorage.setItem('user', JSON.stringify(data.data.user));
-      localStorage.setItem('token', data.data.token);
+      localStorage.setItem('accessToken', data.data.accessToken);
+      localStorage.setItem('refreshToken', data.data.refreshToken);
     } catch (error: any) {
       console.error('Login error:', error);
       
@@ -161,11 +304,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw new Error(data.message || 'Đăng ký thất bại');
       }
 
-      // Lưu thông tin user và token
+      // Lưu thông tin user và tokens
       setUser(data.data.user);
-      setToken(data.data.token);
+      setAccessToken(data.data.accessToken);
+      setRefreshToken(data.data.refreshToken);
       localStorage.setItem('user', JSON.stringify(data.data.user));
-      localStorage.setItem('token', data.data.token);
+      localStorage.setItem('accessToken', data.data.accessToken);
+      localStorage.setItem('refreshToken', data.data.refreshToken);
     } catch (error: any) {
       console.error('Register error:', error);
       if (error.message) {
@@ -177,24 +322,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   /**
    * Hàm đăng xuất
-   * Xóa thông tin user và token khỏi state và localStorage
+   * Xóa thông tin user và tokens khỏi state và localStorage
    */
-  const logout = () => {
+  const logout = async () => {
+    // Gọi API logout để xóa refresh token trên server
+    const currentRefreshToken = refreshToken || localStorage.getItem('refreshToken');
+    if (currentRefreshToken) {
+      try {
+        await fetch(API_ENDPOINTS.LOGOUT, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ refreshToken: currentRefreshToken }),
+        });
+      } catch (error) {
+        console.error('Logout API error:', error);
+      }
+    }
+
     // Xóa khỏi state
     setUser(null);
-    setToken(null);
+    setAccessToken(null);
+    setRefreshToken(null);
     
     // Xóa khỏi localStorage
     localStorage.removeItem('user');
-    localStorage.removeItem('token');
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
   };
 
   // useMemo: Hook để tối ưu performance
-  // Chỉ tạo lại object value khi user hoặc token thay đổi
+  // Chỉ tạo lại object value khi user hoặc tokens thay đổi
   // Tránh re-render không cần thiết cho các component con
   const value = useMemo(
-    () => ({ user, token, login, register, logout }),
-    [user, token]
+    () => ({ user, accessToken, refreshToken, isLoading, login, register, logout, refreshAccessToken }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [user, accessToken, refreshToken, isLoading]
   );
 
   // Provider: Component cung cấp Context cho các component con

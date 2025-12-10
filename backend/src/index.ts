@@ -3,7 +3,11 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import swaggerUi from 'swagger-ui-express';
 import { swaggerSpec } from './config/swagger';
+import { testConnection } from './config/database';
 import authRoutes from './routes/auth.routes';
+import questionRoutes from './routes/question.routes';
+import examRoutes from './routes/exam.routes';
+import examCodeRoutes from './routes/examCode.routes';
 
 dotenv.config();
 
@@ -23,6 +27,9 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/questions', questionRoutes);
+app.use('/api/exams', examRoutes);
+app.use('/api/exam-codes', examCodeRoutes);
 
 // Health check
 /**
@@ -47,8 +54,21 @@ app.get('/api/health', (req: express.Request, res: express.Response) => {
   res.json({ message: 'Server is running!' });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-  console.log(`Swagger documentation available at http://localhost:${PORT}/api-docs`);
-});
+// Khởi động server
+const startServer = async () => {
+  try {
+    // Test kết nối database
+    await testConnection();
+    
+    app.listen(PORT, () => {
+      console.log(`✅ Server is running on port ${PORT}`);
+      console.log(`📖 Swagger documentation available at http://localhost:${PORT}/api-docs`);
+    });
+  } catch (error) {
+    console.error('❌ Failed to start server:', error);
+    process.exit(1);
+  }
+};
+
+startServer();
 

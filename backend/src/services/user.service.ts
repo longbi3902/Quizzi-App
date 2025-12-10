@@ -1,105 +1,130 @@
 import bcrypt from 'bcryptjs';
 import { User, RegisterDTO, UserRole } from '../types/user.types';
+import { query } from '../config/database';
 
-// Fake database - sẽ thay thế bằng MySQL sau
-// TODO: Kết nối với MySQL database
-// const db = mysql.createConnection({...});
-
-// Fake data storage (in-memory)
-let fakeUsers: User[] = [
-  {
-    id: 1,
-    name: 'Nguyễn Văn A',
-    email: 'teacher@example.com',
-    password: '$2a$10$mkSFrgK2f7tTxHGwqcwLCue7aPqCZ8hLt7DncundDP8MbN0cU62Sm', // password: 123456
-    role: UserRole.TEACHER,
-    school: 'Trường THPT ABC',
-    birthYear: 1985,
-    phone: '0123456789',
-    createdAt: new Date()
-  },
-  {
-    id: 2,
-    name: 'Trần Thị B',
-    email: 'student@example.com',
-    password: '$2a$10$mkSFrgK2f7tTxHGwqcwLCue7aPqCZ8hLt7DncundDP8MbN0cU62Sm', // password: 123456
-    role: UserRole.STUDENT,
-    school: 'Trường THPT XYZ',
-    birthYear: 2005,
-    className: '12A1',
-    phone: '0987654321',
-    createdAt: new Date()
-  }
-];
-
-let nextId = 3;
+interface UserRow {
+  id: number;
+  name: string;
+  email: string;
+  password: string;
+  role: string;
+  birth_year: number | null;
+  class_name: string | null;
+  school: string;
+  phone: string | null;
+  created_at: Date;
+}
 
 export class UserService {
-  // TODO: Thay thế bằng MySQL query
-  // async findByEmail(email: string): Promise<User | null> {
-  //   return new Promise((resolve, reject) => {
-  //     db.query('SELECT * FROM users WHERE email = ?', [email], (err, results) => {
-  //       if (err) reject(err);
-  //       resolve(results[0] || null);
-  //     });
-  //   });
-  // }
-
+  /**
+   * Tìm user theo email
+   */
   async findByEmail(email: string): Promise<User | null> {
-    // Fake database query
-    return fakeUsers.find(user => user.email === email) || null;
+    try {
+      const results = await query<UserRow[]>(
+        'SELECT * FROM users WHERE email = ?',
+        [email]
+      );
+
+      if (results.length === 0) {
+        return null;
+      }
+
+      const userRow = results[0];
+      return this.mapRowToUser(userRow);
+    } catch (error) {
+      console.error('Error finding user by email:', error);
+      throw error;
+    }
   }
 
-  // TODO: Thay thế bằng MySQL query
-  // async findById(id: number): Promise<User | null> {
-  //   return new Promise((resolve, reject) => {
-  //     db.query('SELECT * FROM users WHERE id = ?', [id], (err, results) => {
-  //       if (err) reject(err);
-  //       resolve(results[0] || null);
-  //     });
-  //   });
-  // }
-
+  /**
+   * Tìm user theo ID
+   */
   async findById(id: number): Promise<User | null> {
-    // Fake database query
-    return fakeUsers.find(user => user.id === id) || null;
+    try {
+      const results = await query<UserRow[]>(
+        'SELECT * FROM users WHERE id = ?',
+        [id]
+      );
+
+      if (results.length === 0) {
+        return null;
+      }
+
+      const userRow = results[0];
+      return this.mapRowToUser(userRow);
+    } catch (error) {
+      console.error('Error finding user by id:', error);
+      throw error;
+    }
   }
 
-  // TODO: Thay thế bằng MySQL query
-  // async create(userData: RegisterDTO): Promise<User> {
-  //   const hashedPassword = await bcrypt.hash(userData.password, 10);
-  //   return new Promise((resolve, reject) => {
-  //     db.query(
-  //       'INSERT INTO users (name, email, password, role, birth_year, class_name, school, phone) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-  //       [userData.name, userData.email, hashedPassword, userData.role, userData.birthYear, userData.className, userData.school, userData.phone],
-  //       (err, results) => {
-  //         if (err) reject(err);
-  //         resolve({ id: results.insertId, ...userData, password: hashedPassword, createdAt: new Date() });
-  //       }
-  //     );
-  //   });
-  // }
-
+  /**
+   * Tạo user mới
+   */
   async create(userData: RegisterDTO): Promise<User> {
-    // Hash password
-    const hashedPassword = await bcrypt.hash(userData.password, 10);
-    
-    // Fake database insert
-    const newUser: User = {
-      id: nextId++,
-      ...userData,
-      password: hashedPassword,
-      createdAt: new Date()
-    };
-    
-    fakeUsers.push(newUser);
-    return newUser;
+    try {
+      // Hash password
+      const hashedPassword = await bcrypt.hash(userData.password, 10);
+
+      // Insert vào database
+      const result = await query<{ insertId: number }>(
+        `INSERT INTO users (name, email, password, role, birth_year, class_name, school, phone) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          userData.name,
+          userData.email,
+          hashedPassword,
+          userData.role,
+          userData.birthYear || null,
+          userData.className || null,
+          userData.school,
+          userData.phone || null,
+        ]
+      );
+
+      // Lấy user vừa tạo
+      const newUser = await this.findById(result.insertId);
+      if (!newUser) {
+        throw new Error('Không thể tạo user mới');
+      }
+
+      return newUser;
+    } catch (error: any) {
+      console.error('Error creating user:', error);
+      // Kiểm tra lỗi duplicate email
+      if (error.code === 'ER_DUP_ENTRY' || error.message?.includes('Duplicate entry')) {
+        throw new Error('Email đã được sử dụng');
+      }
+      throw error;
+    }
   }
 
+  /**
+   * Xác thực mật khẩu
+   */
   async verifyPassword(plainPassword: string, hashedPassword: string): Promise<boolean> {
     return bcrypt.compare(plainPassword, hashedPassword);
+  }
+
+  /**
+   * Map database row sang User object
+   */
+  private mapRowToUser(row: UserRow): User {
+    return {
+      id: row.id,
+      name: row.name,
+      email: row.email,
+      password: row.password,
+      role: row.role as UserRole,
+      birthYear: row.birth_year || undefined,
+      className: row.class_name || undefined,
+      school: row.school,
+      phone: row.phone || undefined,
+      createdAt: row.created_at,
+    };
   }
 }
 
 export default new UserService();
-

@@ -40,7 +40,7 @@ const Home: React.FC = () => {
         <Paper elevation={3} sx={{ padding: 4 }}>
           {/* Header với nút đăng xuất */}
           <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-            <Typography variant="h4" component="h1">
+            <Typography variant="h4" component="h1" sx={{ color: '#6366f1', fontWeight: 'bold', letterSpacing: '0.5px' }}>
               Quizzi App
             </Typography>
             <Button variant="outlined" color="error" onClick={handleLogout}>
@@ -126,7 +126,7 @@ const Home: React.FC = () => {
 
           {/* Thông báo chào mừng */}
           <Typography variant="h6" gutterBottom>
-            Chào mừng đến với Quizzi App!
+            Chào mừng đến với <span style={{ color: '#6366f1', fontWeight: 'bold', letterSpacing: '0.5px' }}>Quizzi App</span>!
           </Typography>
           <Typography variant="body1" color="text.secondary">
             Đây là trang chủ của ứng dụng thi trắc nghiệm. Các tính năng sẽ được phát triển tiếp theo.

@@ -46,3 +46,9 @@ export const isValidBirthYear = (birthYear: number): boolean => {
   return birthYear >= minYear && birthYear <= currentYear;
 };
 
+
+
+
+
+
+

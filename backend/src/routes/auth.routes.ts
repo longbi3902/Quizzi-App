@@ -88,5 +88,49 @@ router.post('/register', authController.register.bind(authController));
  */
 router.post('/login', authController.login.bind(authController));
 
+/**
+ * @swagger
+ * /api/auth/refresh:
+ *   post:
+ *     summary: Refresh access token
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [refreshToken]
+ *             properties:
+ *               refreshToken:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Refresh token thành công
+ *       401:
+ *         description: Refresh token không hợp lệ hoặc đã hết hạn
+ */
+router.post('/refresh', authController.refreshToken.bind(authController));
+
+/**
+ * @swagger
+ * /api/auth/logout:
+ *   post:
+ *     summary: Đăng xuất
+ *     tags: [Authentication]
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               refreshToken:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Đăng xuất thành công
+ */
+router.post('/logout', authController.logout.bind(authController));
+
 export default router;
 

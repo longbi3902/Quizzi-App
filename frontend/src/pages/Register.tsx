@@ -148,12 +148,12 @@ const Register: React.FC = () => {
           alignItems: 'center',
         }}
       >
-        <Paper elevation={3} sx={{ padding: 4, width: '100%' }}>
-          <Typography component="h1" variant="h4" align="center" gutterBottom>
-            Quizzi App
+        <Paper elevation={3} sx={{ padding: 4, width: '100%', borderRadius: '12px' }}>
+          <Typography component="h1" variant="h4" align="center" gutterBottom sx={{ color: '#6366f1', fontWeight: 'bold', letterSpacing: '0.5px' }}>
+            QUIZZI
           </Typography>
-          <Typography component="h2" variant="h5" align="center" gutterBottom>
-            Đăng Ký
+          <Typography component="h2" variant="h6" align="center" gutterBottom sx={{ opacity: 0.7, fontSize: '0.9rem' }}>
+            ĐĂNG KÝ
           </Typography>
 
           {/* Hiển thị lỗi */}

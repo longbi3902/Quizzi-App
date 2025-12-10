@@ -72,20 +72,19 @@ const Login: React.FC = () => {
     <Container component="main" maxWidth="xs">
       <Box
         sx={{
-          marginTop: 8,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
         }}
       >
         {/* Paper: Component từ MUI để tạo card/container có shadow */}
-        <Paper elevation={3} sx={{ padding: 4, width: '100%' }}>
+        <Paper elevation={3} sx={{ padding: 4, width: '100%', borderRadius: '12px' }}>
           {/* Header */}
-          <Typography component="h1" variant="h4" align="center" gutterBottom>
-            Quizzi App
+          <Typography component="h1" variant="h4" align="center" gutterBottom sx={{ color: '#6366f1', fontWeight: 'bold', letterSpacing: '0.5px' }}>
+            QUIZZI
           </Typography>
-          <Typography component="h2" variant="h5" align="center" gutterBottom>
-            Đăng Nhập
+          <Typography component="h2" variant="h6" align="center" gutterBottom sx={{ opacity: 0.7, fontSize: '0.9rem' }}>
+            ĐĂNG NHẬP
           </Typography>
 
           {/* Hiển thị thông báo lỗi nếu có */}
@@ -109,6 +108,8 @@ const Login: React.FC = () => {
               autoFocus // Tự động focus vào input này khi trang load
               value={email}
               onChange={(e) => setEmail(e.target.value)} // Cập nhật state khi user nhập
+              size="small"
+              variant="outlined"
             />
             
             {/* Input Password */}
@@ -123,6 +124,8 @@ const Login: React.FC = () => {
               autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              size="small"
+              variant="outlined"
             />
             
             {/* Button Submit */}
