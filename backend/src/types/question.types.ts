@@ -18,6 +18,8 @@ export interface Question {
   content: string;
   image?: string;
   difficulty: number; // 1-4
+  grade: number | null; // Khối lớp (1-12)
+  subjectId: number | null; // ID môn học
   createdAt: Date;
 }
 
@@ -29,6 +31,8 @@ export interface CreateQuestionDTO {
   content: string;
   image?: string;
   difficulty: number; // 1-4
+  grade?: number | null; // Khối lớp (1-12)
+  subjectId?: number | null; // ID môn học
   answers: CreateAnswerDTO[];
 }
 
@@ -41,6 +45,8 @@ export interface UpdateQuestionDTO {
   content?: string;
   image?: string;
   difficulty?: number; // 1-4
+  grade?: number | null; // Khối lớp (1-12)
+  subjectId?: number | null; // ID môn học
 }
 
 export interface UpdateAnswerDTO {

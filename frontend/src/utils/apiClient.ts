@@ -114,3 +114,60 @@ export const apiFetch = async (
   return response;
 };
 
+/**
+ * API Client object với các methods tiện lợi
+ */
+const apiClient = {
+  /**
+   * GET request
+   */
+  get: async (url: string, options: RequestInit = {}): Promise<Response> => {
+    return apiFetch(url, {
+      ...options,
+      method: 'GET',
+    });
+  },
+
+  /**
+   * POST request
+   */
+  post: async (url: string, body?: any, options: RequestInit = {}): Promise<Response> => {
+    return apiFetch(url, {
+      ...options,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers,
+      },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+  },
+
+  /**
+   * PUT request
+   */
+  put: async (url: string, body?: any, options: RequestInit = {}): Promise<Response> => {
+    return apiFetch(url, {
+      ...options,
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers,
+      },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+  },
+
+  /**
+   * DELETE request
+   */
+  delete: async (url: string, options: RequestInit = {}): Promise<Response> => {
+    return apiFetch(url, {
+      ...options,
+      method: 'DELETE',
+    });
+  },
+};
+
+export default apiClient;
+

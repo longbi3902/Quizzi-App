@@ -16,3 +16,6 @@ CREATE TABLE IF NOT EXISTS exam_questions (
   UNIQUE KEY unique_exam_question (exam_id, question_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+
+
+

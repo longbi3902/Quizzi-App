@@ -20,11 +20,15 @@ import {
   Checkbox,
   FormControlLabel,
   MenuItem,
+  FormControl,
+  InputLabel,
+  Select,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { API_ENDPOINTS } from '../constants/api';
 import { QuestionWithAnswers, CreateAnswerDTO, UpdateQuestionDTO, QuestionDifficulty } from '../types/question.types';
+import { Subject } from '../types/subject.types';
 import { difficultyOptions } from '../utils/questionUtils';
 
 interface AnswerFormData {
@@ -41,10 +45,14 @@ const EditQuestion: React.FC = () => {
   const [questionContent, setQuestionContent] = useState<string>('');
   const [imageUrl, setImageUrl] = useState<string>('');
   const [difficulty, setDifficulty] = useState<number>(QuestionDifficulty.NHAN_BIET);
+  const [grade, setGrade] = useState<number | ''>('');
+  const [subjectId, setSubjectId] = useState<number | ''>('');
+  const [subjects, setSubjects] = useState<Subject[]>([]);
   const [answers, setAnswers] = useState<AnswerFormData[]>([]);
   const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [loadingData, setLoadingData] = useState<boolean>(true);
+  const [loadingSubjects, setLoadingSubjects] = useState<boolean>(false);
 
   /**
    * Load dữ liệu câu hỏi
@@ -70,6 +78,8 @@ const EditQuestion: React.FC = () => {
         setQuestionContent(question.content);
         setImageUrl(question.image || '');
         setDifficulty(question.difficulty || QuestionDifficulty.NHAN_BIET);
+        setGrade(question.grade || '');
+        setSubjectId(question.subjectId || '');
         setAnswers(
           question.answers.map((a) => ({
             id: a.id,
@@ -86,6 +96,29 @@ const EditQuestion: React.FC = () => {
 
     fetchQuestion();
   }, [questionId]);
+
+  /**
+   * Load danh sách môn học
+   */
+  useEffect(() => {
+    const fetchSubjects = async () => {
+      try {
+        setLoadingSubjects(true);
+        const response = await fetch(API_ENDPOINTS.SUBJECTS);
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          setSubjects(data.data || []);
+        }
+      } catch (err) {
+        console.error('Error fetching subjects:', err);
+      } finally {
+        setLoadingSubjects(false);
+      }
+    };
+
+    fetchSubjects();
+  }, []);
 
   /**
    * Thêm đáp án mới
@@ -173,6 +206,8 @@ const EditQuestion: React.FC = () => {
         content: questionContent.trim(),
         image: imageUrl.trim() || undefined,
         difficulty: difficulty,
+        grade: grade === '' ? null : Number(grade),
+        subjectId: subjectId === '' ? null : Number(subjectId),
       };
 
       const questionResponse = await fetch(`${API_ENDPOINTS.QUESTIONS}/${questionId}`, {
@@ -305,6 +340,41 @@ const EditQuestion: React.FC = () => {
                 </MenuItem>
               ))}
             </TextField>
+
+            {/* Khối lớp */}
+            <FormControl fullWidth sx={{ mb: 3 }}>
+              <InputLabel>Khối lớp</InputLabel>
+              <Select
+                value={grade}
+                label="Khối lớp"
+                onChange={(e) => setGrade(e.target.value === '' ? '' : Number(e.target.value))}
+              >
+                <MenuItem value="">Không chọn</MenuItem>
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((g) => (
+                  <MenuItem key={g} value={g}>
+                    Khối {g}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            {/* Môn học */}
+            <FormControl fullWidth sx={{ mb: 3 }}>
+              <InputLabel>Môn học</InputLabel>
+              <Select
+                value={subjectId}
+                label="Môn học"
+                onChange={(e) => setSubjectId(e.target.value === '' ? '' : Number(e.target.value))}
+                disabled={loadingSubjects}
+              >
+                <MenuItem value="">Không chọn</MenuItem>
+                {subjects.map((subject) => (
+                  <MenuItem key={subject.id} value={subject.id}>
+                    {subject.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
 
             <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
               Đáp án

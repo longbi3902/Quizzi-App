@@ -8,12 +8,46 @@ export class QuestionController {
    */
   async getAllQuestions(req: Request, res: Response) {
     try {
-      const questions = await questionService.findAll();
-      res.json({
-        success: true,
-        message: 'Lấy danh sách câu hỏi thành công',
-        data: questions
-      });
+      // Kiểm tra có query params cho pagination không
+      const page = req.query.page ? Number.parseInt(req.query.page as string, 10) : undefined;
+      const limit = req.query.limit ? Number.parseInt(req.query.limit as string, 10) : undefined;
+
+      if (page !== undefined && limit !== undefined) {
+        // Sử dụng pagination với filter
+        const filters = {
+          name: req.query.name as string | undefined,
+          subjectId: req.query.subjectId
+            ? Number.parseInt(req.query.subjectId as string, 10)
+            : undefined,
+          grade: req.query.grade
+            ? Number.parseInt(req.query.grade as string, 10)
+            : undefined,
+          difficulty: req.query.difficulty
+            ? Number.parseInt(req.query.difficulty as string, 10)
+            : undefined,
+        };
+
+        const result = await questionService.findAllPaginated(page, limit, filters);
+        res.json({
+          success: true,
+          message: 'Lấy danh sách câu hỏi thành công',
+          data: result.data,
+          pagination: {
+            total: result.total,
+            page: result.page,
+            limit: result.limit,
+            totalPages: result.totalPages,
+          },
+        });
+      } else {
+        // Lấy tất cả (backward compatibility)
+        const questions = await questionService.findAll();
+        res.json({
+          success: true,
+          message: 'Lấy danh sách câu hỏi thành công',
+          data: questions
+        });
+      }
     } catch (error: any) {
       console.error('Get all questions error:', error);
       res.status(500).json({
@@ -276,4 +310,7 @@ export class QuestionController {
 }
 
 export default new QuestionController();
+
+
+
 

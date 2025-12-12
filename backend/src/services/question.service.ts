@@ -14,6 +14,8 @@ interface QuestionRow {
   content: string;
   image: string | null;
   difficulty: number;
+  grade: number | null;
+  subject_id: number | null;
   created_at: Date;
 }
 
@@ -48,6 +50,99 @@ export class QuestionService {
       return questionsWithAnswers;
     } catch (error) {
       console.error('Error finding all questions:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Lấy tất cả câu hỏi kèm đáp án với phân trang và bộ lọc
+   */
+  async findAllPaginated(
+    page: number = 1,
+    limit: number = 10,
+    filters?: {
+      name?: string;
+      subjectId?: number | null;
+      grade?: number | null;
+      difficulty?: number | null;
+    }
+  ): Promise<{
+    data: QuestionWithAnswers[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
+    try {
+      // Xây dựng WHERE clause
+      let whereClause = '';
+      const params: any[] = [];
+
+      if (filters) {
+        const conditions: string[] = [];
+
+        if (filters.name && filters.name.trim()) {
+          conditions.push('content LIKE ?');
+          params.push(`%${filters.name.trim()}%`);
+        }
+
+        if (filters.subjectId !== undefined && filters.subjectId !== null) {
+          conditions.push('subject_id = ?');
+          params.push(filters.subjectId);
+        }
+
+        if (filters.grade !== undefined && filters.grade !== null) {
+          conditions.push('grade = ?');
+          params.push(filters.grade);
+        }
+
+        if (filters.difficulty !== undefined && filters.difficulty !== null) {
+          conditions.push('difficulty = ?');
+          params.push(filters.difficulty);
+        }
+
+        if (conditions.length > 0) {
+          whereClause = 'WHERE ' + conditions.join(' AND ');
+        }
+      }
+
+      // Đếm tổng số records
+      const countRows = await query<{ count: number }[]>(
+        `SELECT COUNT(*) as count FROM questions ${whereClause}`,
+        params
+      );
+      const total = countRows[0]?.count || 0;
+      const totalPages = Math.ceil(total / limit);
+      const offset = (page - 1) * limit;
+
+      const limitInt = Number.parseInt(limit.toString(), 10);
+      const offsetInt = Number.parseInt(offset.toString(), 10);
+
+      // Lấy dữ liệu với pagination
+      const questionRows = await query<QuestionRow[]>(
+        `SELECT * FROM questions ${whereClause} ORDER BY created_at DESC LIMIT ${limitInt} OFFSET ${offsetInt}`,
+        params
+      );
+
+      const questionsWithAnswers: QuestionWithAnswers[] = [];
+
+      for (const questionRow of questionRows) {
+        const answers = await this.getAnswersByQuestionId(questionRow.id);
+        questionsWithAnswers.push({
+          ...this.mapRowToQuestion(questionRow),
+          answers,
+        });
+      }
+
+      return {
+        data: questionsWithAnswers,
+        total,
+        page,
+        limit,
+        totalPages,
+      };
+    } catch (error) {
+      console.error('Error finding all questions with pagination:', error);
       throw error;
     }
   }
@@ -114,8 +209,14 @@ export class QuestionService {
 
       // Insert câu hỏi
       const questionResult = await query<{ insertId: number }>(
-        'INSERT INTO questions (content, image, difficulty) VALUES (?, ?, ?)',
-        [questionData.content.trim(), questionData.image?.trim() || null, questionData.difficulty]
+        'INSERT INTO questions (content, image, difficulty, grade, subject_id) VALUES (?, ?, ?, ?, ?)',
+        [
+          questionData.content.trim(),
+          questionData.image?.trim() || null,
+          questionData.difficulty,
+          questionData.grade || null,
+          questionData.subjectId || null,
+        ]
       );
 
       const questionId = questionResult.insertId;
@@ -178,6 +279,16 @@ export class QuestionService {
         }
         updates.push('difficulty = ?');
         values.push(questionData.difficulty);
+      }
+
+      if (questionData.grade !== undefined) {
+        updates.push('grade = ?');
+        values.push(questionData.grade || null);
+      }
+
+      if (questionData.subjectId !== undefined) {
+        updates.push('subject_id = ?');
+        values.push(questionData.subjectId || null);
       }
 
       if (updates.length === 0) {
@@ -313,6 +424,8 @@ export class QuestionService {
       content: row.content,
       image: row.image || undefined,
       difficulty: row.difficulty,
+      grade: row.grade || null,
+      subjectId: row.subject_id || null,
       createdAt: row.created_at,
     };
   }

@@ -8,7 +8,7 @@
  * - Checkbox để đánh dấu đáp án đúng
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Container,
@@ -23,11 +23,15 @@ import {
   Checkbox,
   FormControlLabel,
   MenuItem,
+  FormControl,
+  InputLabel,
+  Select,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { API_ENDPOINTS } from '../constants/api';
 import { CreateQuestionDTO, CreateAnswerDTO, QuestionDifficulty } from '../types/question.types';
+import { Subject } from '../types/subject.types';
 import { difficultyOptions } from '../utils/questionUtils';
 
 interface AnswerFormData {
@@ -42,6 +46,9 @@ const AddQuestion: React.FC = () => {
   const [questionContent, setQuestionContent] = useState<string>('');
   const [imageUrl, setImageUrl] = useState<string>('');
   const [difficulty, setDifficulty] = useState<number>(QuestionDifficulty.NHAN_BIET);
+  const [grade, setGrade] = useState<number | ''>('');
+  const [subjectId, setSubjectId] = useState<number | ''>('');
+  const [subjects, setSubjects] = useState<Subject[]>([]);
   const [answers, setAnswers] = useState<AnswerFormData[]>([
     { content: '', isTrue: false },
     { content: '', isTrue: false },
@@ -49,6 +56,7 @@ const AddQuestion: React.FC = () => {
 
   const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
+  const [loadingSubjects, setLoadingSubjects] = useState<boolean>(false);
 
   /**
    * Thêm đáp án mới
@@ -122,6 +130,29 @@ const AddQuestion: React.FC = () => {
   };
 
   /**
+   * Load danh sách môn học
+   */
+  useEffect(() => {
+    const fetchSubjects = async () => {
+      try {
+        setLoadingSubjects(true);
+        const response = await fetch(API_ENDPOINTS.SUBJECTS);
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          setSubjects(data.data || []);
+        }
+      } catch (err) {
+        console.error('Error fetching subjects:', err);
+      } finally {
+        setLoadingSubjects(false);
+      }
+    };
+
+    fetchSubjects();
+  }, []);
+
+  /**
    * Xử lý khi submit form
    */
   const handleSubmit = async (e: React.FormEvent) => {
@@ -141,6 +172,8 @@ const AddQuestion: React.FC = () => {
         content: questionContent.trim(),
         image: imageUrl.trim() || undefined,
         difficulty: difficulty,
+        grade: grade === '' ? null : Number(grade),
+        subjectId: subjectId === '' ? null : Number(subjectId),
         answers: answers.map(answer => ({
           content: answer.content.trim(),
           isTrue: answer.isTrue,
@@ -242,6 +275,41 @@ const AddQuestion: React.FC = () => {
                 </MenuItem>
               ))}
             </TextField>
+
+            {/* Khối lớp */}
+            <FormControl fullWidth sx={{ mb: 3 }}>
+              <InputLabel>Khối lớp</InputLabel>
+              <Select
+                value={grade}
+                label="Khối lớp"
+                onChange={(e) => setGrade(e.target.value === '' ? '' : Number(e.target.value))}
+              >
+                <MenuItem value="">Không chọn</MenuItem>
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((g) => (
+                  <MenuItem key={g} value={g}>
+                    Khối {g}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            {/* Môn học */}
+            <FormControl fullWidth sx={{ mb: 3 }}>
+              <InputLabel>Môn học</InputLabel>
+              <Select
+                value={subjectId}
+                label="Môn học"
+                onChange={(e) => setSubjectId(e.target.value === '' ? '' : Number(e.target.value))}
+                disabled={loadingSubjects}
+              >
+                <MenuItem value="">Không chọn</MenuItem>
+                {subjects.map((subject) => (
+                  <MenuItem key={subject.id} value={subject.id}>
+                    {subject.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
 
             {/* Danh sách đáp án */}
             <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>

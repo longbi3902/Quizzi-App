@@ -23,6 +23,14 @@ import CreateExam from './pages/CreateExam';
 import EditExam from './pages/EditExam';
 import ExamCodeList from './pages/ExamCodeList';
 import ExamCodeDetail from './pages/ExamCodeDetail';
+import ExamRoomManagement from './pages/ExamRoomManagement';
+import CreateExamRoom from './pages/CreateExamRoom';
+import EditExamRoom from './pages/EditExamRoom';
+import ExamRoomHistory from './pages/ExamRoomHistory';
+import JoinExamRoom from './pages/JoinExamRoom';
+import ExamRoom from './pages/ExamRoom';
+import ExamTaking from './pages/ExamTaking';
+import ExamResult from './pages/ExamResult';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import TopHeader from './components/TopHeader';
 
@@ -283,6 +291,46 @@ function App() {
                   }
                 />
                 
+                {/* Tham gia phòng thi - chỉ học sinh mới vào được */}
+                <Route
+                  path="/join-exam-room"
+                  element={
+                    <ProtectedRoute>
+                      <JoinExamRoom />
+                    </ProtectedRoute>
+                  }
+                />
+                
+                {/* Phòng thi - chỉ học sinh mới vào được */}
+                <Route
+                  path="/exam-room"
+                  element={
+                    <ProtectedRoute>
+                      <ExamRoom />
+                    </ProtectedRoute>
+                  }
+                />
+                
+                {/* Làm bài thi - chỉ học sinh mới vào được */}
+                <Route
+                  path="/exam-taking"
+                  element={
+                    <ProtectedRoute>
+                      <ExamTaking />
+                    </ProtectedRoute>
+                  }
+                />
+                
+                {/* Xem kết quả bài thi - chỉ học sinh mới vào được */}
+                <Route
+                  path="/exam-result"
+                  element={
+                    <ProtectedRoute>
+                      <ExamResult />
+                    </ProtectedRoute>
+                  }
+                />
+                
                 {/* Dashboard giáo viên - chỉ giáo viên mới vào được */}
                 <Route
                   path="/teacher/dashboard"
@@ -369,6 +417,46 @@ function App() {
                   element={
                     <TeacherRoute>
                       <ExamCodeDetail />
+                    </TeacherRoute>
+                  }
+                />
+                
+                {/* Quản lý phòng thi - chỉ giáo viên mới vào được */}
+                <Route
+                  path="/teacher/exam-rooms"
+                  element={
+                    <TeacherRoute>
+                      <ExamRoomManagement />
+                    </TeacherRoute>
+                  }
+                />
+                
+                {/* Tạo phòng thi - chỉ giáo viên mới vào được */}
+                <Route
+                  path="/teacher/exam-rooms/create"
+                  element={
+                    <TeacherRoute>
+                      <CreateExamRoom />
+                    </TeacherRoute>
+                  }
+                />
+                
+                {/* Chỉnh sửa phòng thi - chỉ giáo viên mới vào được */}
+                <Route
+                  path="/teacher/exam-rooms/edit/:id"
+                  element={
+                    <TeacherRoute>
+                      <EditExamRoom />
+                    </TeacherRoute>
+                  }
+                />
+                
+                {/* Lịch sử thi - chỉ giáo viên mới vào được */}
+                <Route
+                  path="/teacher/exam-rooms/history/:examRoomId"
+                  element={
+                    <TeacherRoute>
+                      <ExamRoomHistory />
                     </TeacherRoute>
                   }
                 />

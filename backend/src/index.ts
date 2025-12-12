@@ -8,6 +8,9 @@ import authRoutes from './routes/auth.routes';
 import questionRoutes from './routes/question.routes';
 import examRoutes from './routes/exam.routes';
 import examCodeRoutes from './routes/examCode.routes';
+import examRoomRoutes from './routes/examRoom.routes';
+import examResultRoutes from './routes/examResult.routes';
+import subjectRoutes from './routes/subject.routes';
 
 dotenv.config();
 
@@ -30,6 +33,9 @@ app.use('/api/auth', authRoutes);
 app.use('/api/questions', questionRoutes);
 app.use('/api/exams', examRoutes);
 app.use('/api/exam-codes', examCodeRoutes);
+app.use('/api/exam-rooms', examRoomRoutes);
+app.use('/api/exam-results', examResultRoutes);
+app.use('/api/subjects', subjectRoutes);
 
 // Health check
 /**

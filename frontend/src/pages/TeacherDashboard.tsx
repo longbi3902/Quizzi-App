@@ -22,6 +22,7 @@ import {
 } from '@mui/material';
 import QuizIcon from '@mui/icons-material/Quiz';
 import ListIcon from '@mui/icons-material/List';
+import MeetingRoomIcon from '@mui/icons-material/MeetingRoom';
 import { useAuth } from '../contexts/AuthContext';
 
 const TeacherDashboard: React.FC = () => {
@@ -129,6 +130,41 @@ const TeacherDashboard: React.FC = () => {
                 </CardContent>
                 <CardActions>
                   <Button size="small" onClick={() => navigate('/teacher/exams')}>
+                    Xem chi tiết
+                  </Button>
+                </CardActions>
+              </Card>
+            </Grid>
+
+            {/* Quản lý phòng thi */}
+            <Grid item xs={12} sm={6} md={4}>
+              <Card
+                sx={{
+                  height: '100%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  cursor: 'pointer',
+                  transition: 'transform 0.2s, box-shadow 0.2s',
+                  '&:hover': {
+                    transform: 'translateY(-4px)',
+                    boxShadow: 6,
+                  },
+                }}
+                onClick={() => navigate('/teacher/exam-rooms')}
+              >
+                <CardContent sx={{ flexGrow: 1 }}>
+                  <Box display="flex" alignItems="center" mb={2}>
+                    <MeetingRoomIcon sx={{ fontSize: 40, color: '#9c27b0', mr: 2 }} />
+                    <Typography variant="h6" component="h2">
+                      Quản lý phòng thi
+                    </Typography>
+                  </Box>
+                  <Typography variant="body2" color="text.secondary">
+                    Tạo và quản lý phòng thi, gán đề thi cho phòng thi
+                  </Typography>
+                </CardContent>
+                <CardActions>
+                  <Button size="small" onClick={() => navigate('/teacher/exam-rooms')}>
                     Xem chi tiết
                   </Button>
                 </CardActions>

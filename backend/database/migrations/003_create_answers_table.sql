@@ -12,3 +12,6 @@ CREATE TABLE IF NOT EXISTS answers (
   INDEX idx_is_true (is_true)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+
+
+

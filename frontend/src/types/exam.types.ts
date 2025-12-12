@@ -46,6 +46,8 @@ export interface CreateExamRandomDTO {
   vanDungCount: number; // Số câu vận dụng
   vanDungCaoCount: number; // Số câu vận dụng cao
   numberOfCodes?: number; // Số mã đề cần tạo
+  grade?: number | null; // Khối lớp (1-12)
+  subjectId?: number | null; // ID môn học
 }
 
 export interface UpdateExamDTO {

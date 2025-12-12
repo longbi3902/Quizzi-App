@@ -32,6 +32,8 @@ import {
   Card,
   CardContent,
   Grid,
+  Pagination,
+  Stack,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -42,6 +44,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import { API_ENDPOINTS } from '../constants/api';
 import { QuestionWithAnswers } from '../types/question.types';
+import { Subject } from '../types/subject.types';
 import { getDifficultyName, getDifficultyColor } from '../utils/questionUtils';
 
 const QuestionManagement: React.FC = () => {
@@ -53,6 +56,11 @@ const QuestionManagement: React.FC = () => {
   const [questionToDelete, setQuestionToDelete] = useState<number | null>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState<boolean>(false);
   const [questionToView, setQuestionToView] = useState<QuestionWithAnswers | null>(null);
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [subjects, setSubjects] = useState<Subject[]>([]);
 
   /**
    * Lấy danh sách câu hỏi từ API
@@ -61,7 +69,11 @@ const QuestionManagement: React.FC = () => {
     try {
       setLoading(true);
       setError('');
-      const response = await fetch(API_ENDPOINTS.QUESTIONS);
+      const params = new URLSearchParams();
+      params.append('page', page.toString());
+      params.append('limit', limit.toString());
+      
+      const response = await fetch(`${API_ENDPOINTS.QUESTIONS}?${params.toString()}`);
       const data = await response.json();
 
       if (!response.ok || !data.success) {
@@ -69,6 +81,14 @@ const QuestionManagement: React.FC = () => {
       }
 
       setQuestions(data.data || []);
+      if (data.pagination) {
+        setTotal(data.pagination.total);
+        setTotalPages(data.pagination.totalPages);
+      } else {
+        // Nếu không có pagination, dùng length của data
+        setTotal(data.data?.length || 0);
+        setTotalPages(1);
+      }
     } catch (err: any) {
       console.error('Fetch questions error:', err);
       setError(err.message || 'Không thể tải danh sách câu hỏi');
@@ -122,6 +142,21 @@ const QuestionManagement: React.FC = () => {
   // Load danh sách câu hỏi khi component mount
   useEffect(() => {
     fetchQuestions();
+  }, [page]);
+
+  useEffect(() => {
+    const fetchSubjects = async () => {
+      try {
+        const response = await fetch(API_ENDPOINTS.SUBJECTS);
+        const data = await response.json();
+        if (response.ok && data.success) {
+          setSubjects(data.data || []);
+        }
+      } catch (err) {
+        console.error('Error fetching subjects:', err);
+      }
+    };
+    fetchSubjects();
   }, []);
 
   return (
@@ -181,6 +216,8 @@ const QuestionManagement: React.FC = () => {
                   <TableRow>
                     <TableCell>ID</TableCell>
                     <TableCell>Nội dung câu hỏi</TableCell>
+                    <TableCell>Khối</TableCell>
+                    <TableCell>Môn</TableCell>
                     <TableCell>Độ khó</TableCell>
                     <TableCell>Số đáp án</TableCell>
                     <TableCell>Đáp án đúng</TableCell>
@@ -206,6 +243,12 @@ const QuestionManagement: React.FC = () => {
                           >
                             {question.content}
                           </Typography>
+                        </TableCell>
+                        <TableCell>{question.grade ? `Khối ${question.grade}` : 'N/A'}</TableCell>
+                        <TableCell>
+                          {question.subjectId
+                            ? subjects.find((s) => s.id === question.subjectId)?.name || 'N/A'
+                            : 'N/A'}
                         </TableCell>
                         <TableCell>
                           <Chip
@@ -265,6 +308,27 @@ const QuestionManagement: React.FC = () => {
                 </TableBody>
               </Table>
             </TableContainer>
+          )}
+
+          {/* Phân trang */}
+          {total > 0 && (
+            <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center' }}>
+              <Stack spacing={2}>
+                {totalPages > 1 && (
+                  <Pagination
+                    count={totalPages}
+                    page={page}
+                    onChange={(event, value) => setPage(value)}
+                    color="primary"
+                    showFirstButton
+                    showLastButton
+                  />
+                )}
+                <Typography variant="body2" color="text.secondary" textAlign="center">
+                  Hiển thị {questions.length} / {total} câu hỏi
+                </Typography>
+              </Stack>
+            </Box>
           )}
         </Paper>
       </Box>

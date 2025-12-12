@@ -58,6 +58,56 @@ export class ExamService {
   }
 
   /**
+   * Lấy tất cả đề thi với phân trang
+   */
+  async findAllPaginated(page: number = 1, limit: number = 10): Promise<{
+    data: ExamWithQuestions[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
+    try {
+      // Đếm tổng số records
+      const countRows = await query<{ count: number }[]>(
+        'SELECT COUNT(*) as count FROM exams'
+      );
+      const total = countRows[0]?.count || 0;
+      const totalPages = Math.ceil(total / limit);
+      const offset = (page - 1) * limit;
+
+      const limitInt = Number.parseInt(limit.toString(), 10);
+      const offsetInt = Number.parseInt(offset.toString(), 10);
+
+      // Lấy dữ liệu với pagination
+      const examRows = await query<ExamRow[]>(
+        `SELECT * FROM exams ORDER BY created_at DESC LIMIT ${limitInt} OFFSET ${offsetInt}`
+      );
+
+      const examsWithQuestions: ExamWithQuestions[] = [];
+
+      for (const examRow of examRows) {
+        const questions = await this.getExamQuestions(examRow.id);
+        examsWithQuestions.push({
+          ...this.mapRowToExam(examRow),
+          questions,
+        });
+      }
+
+      return {
+        data: examsWithQuestions,
+        total,
+        page,
+        limit,
+        totalPages,
+      };
+    } catch (error) {
+      console.error('Error finding all exams with pagination:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Lấy đề thi theo ID
    */
   async findById(id: number): Promise<ExamWithQuestions | null> {
@@ -205,7 +255,9 @@ export class ExamService {
       if (examData.nhanBietCount > 0) {
         const questions = await this.getRandomQuestionsByDifficulty(
           QuestionDifficulty.NHAN_BIET,
-          examData.nhanBietCount
+          examData.nhanBietCount,
+          examData.grade,
+          examData.subjectId
         );
         if (questions.length < examData.nhanBietCount) {
           throw new Error(
@@ -224,7 +276,9 @@ export class ExamService {
       if (examData.thongHieuCount > 0) {
         const questions = await this.getRandomQuestionsByDifficulty(
           QuestionDifficulty.THONG_HIEU,
-          examData.thongHieuCount
+          examData.thongHieuCount,
+          examData.grade,
+          examData.subjectId
         );
         if (questions.length < examData.thongHieuCount) {
           throw new Error(
@@ -243,7 +297,9 @@ export class ExamService {
       if (examData.vanDungCount > 0) {
         const questions = await this.getRandomQuestionsByDifficulty(
           QuestionDifficulty.VAN_DUNG,
-          examData.vanDungCount
+          examData.vanDungCount,
+          examData.grade,
+          examData.subjectId
         );
         if (questions.length < examData.vanDungCount) {
           throw new Error(
@@ -262,7 +318,9 @@ export class ExamService {
       if (examData.vanDungCaoCount > 0) {
         const questions = await this.getRandomQuestionsByDifficulty(
           QuestionDifficulty.VAN_DUNG_CAO,
-          examData.vanDungCaoCount
+          examData.vanDungCaoCount,
+          examData.grade,
+          examData.subjectId
         );
         if (questions.length < examData.vanDungCaoCount) {
           throw new Error(
@@ -296,7 +354,9 @@ export class ExamService {
    */
   private async getRandomQuestionsByDifficulty(
     difficulty: number,
-    count: number
+    count: number,
+    grade?: number | null,
+    subjectId?: number | null
   ): Promise<{ id: number }[]> {
     try {
       // LIMIT không thể dùng như parameter trong prepared statement
@@ -306,12 +366,26 @@ export class ExamService {
         throw new Error('Số lượng câu hỏi không hợp lệ');
       }
 
+      // Xây dựng WHERE clause
+      let whereClause = 'WHERE difficulty = ?';
+      const params: any[] = [difficulty];
+
+      if (grade !== undefined && grade !== null) {
+        whereClause += ' AND grade = ?';
+        params.push(grade);
+      }
+
+      if (subjectId !== undefined && subjectId !== null) {
+        whereClause += ' AND subject_id = ?';
+        params.push(subjectId);
+      }
+
       const results = await query<{ id: number }[]>(
         `SELECT id FROM questions 
-         WHERE difficulty = ? 
+         ${whereClause}
          ORDER BY RAND() 
          LIMIT ${countNum}`,
-        [difficulty]
+        params
       );
       return results;
     } catch (error) {

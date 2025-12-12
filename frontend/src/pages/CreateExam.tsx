@@ -24,6 +24,14 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Checkbox,
+  FormControlLabel,
+  Pagination,
+  Stack,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -31,6 +39,7 @@ import AddIcon from '@mui/icons-material/Add';
 import { API_ENDPOINTS } from '../constants/api';
 import { CreateExamDTO, CreateExamRandomDTO } from '../types/exam.types';
 import { QuestionWithAnswers } from '../types/question.types';
+import { Subject } from '../types/subject.types';
 import { getDifficultyName, getDifficultyColor } from '../utils/questionUtils';
 
 interface TabPanelProps {
@@ -54,6 +63,17 @@ const CreateExam: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [availableQuestions, setAvailableQuestions] = useState<QuestionWithAnswers[]>([]);
+  const [subjects, setSubjects] = useState<Subject[]>([]);
+  
+  // Bộ lọc cho tab tự chọn
+  const [filterName, setFilterName] = useState('');
+  const [filterSubjectId, setFilterSubjectId] = useState<number | ''>('');
+  const [filterGrade, setFilterGrade] = useState<number | ''>('');
+  const [filterDifficulty, setFilterDifficulty] = useState<number | ''>('');
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
 
   // Form data chung
   const [examName, setExamName] = useState('');
@@ -72,22 +92,66 @@ const CreateExam: React.FC = () => {
   const [thongHieuCount, setThongHieuCount] = useState<number>(0);
   const [vanDungCount, setVanDungCount] = useState<number>(0);
   const [vanDungCaoCount, setVanDungCaoCount] = useState<number>(0);
+  const [randomGrade, setRandomGrade] = useState<number | ''>('');
+  const [randomSubjectId, setRandomSubjectId] = useState<number | ''>('');
 
-  // Load danh sách câu hỏi
+  // Load danh sách môn học
   useEffect(() => {
-    const fetchQuestions = async () => {
+    const fetchSubjects = async () => {
       try {
-        const response = await fetch(API_ENDPOINTS.QUESTIONS);
+        const response = await fetch(API_ENDPOINTS.SUBJECTS);
         const data = await response.json();
         if (response.ok && data.success) {
-          setAvailableQuestions(data.data || []);
+          setSubjects(data.data || []);
         }
       } catch (err) {
-        console.error('Error fetching questions:', err);
+        console.error('Error fetching subjects:', err);
       }
     };
-    fetchQuestions();
+    fetchSubjects();
   }, []);
+
+  // Load danh sách câu hỏi với filter và pagination (chỉ cho tab tự chọn)
+  useEffect(() => {
+    if (tabValue === 0) {
+      fetchQuestions();
+    }
+  }, [tabValue, page, filterName, filterSubjectId, filterGrade, filterDifficulty]);
+
+  const fetchQuestions = async () => {
+    try {
+      const params = new URLSearchParams();
+      params.append('page', page.toString());
+      params.append('limit', limit.toString());
+      if (filterName.trim()) {
+        params.append('name', filterName.trim());
+      }
+      if (filterSubjectId !== '') {
+        params.append('subjectId', filterSubjectId.toString());
+      }
+      if (filterGrade !== '') {
+        params.append('grade', filterGrade.toString());
+      }
+      if (filterDifficulty !== '') {
+        params.append('difficulty', filterDifficulty.toString());
+      }
+
+      const response = await fetch(`${API_ENDPOINTS.QUESTIONS}?${params.toString()}`);
+      const data = await response.json();
+      if (response.ok && data.success) {
+        setAvailableQuestions(data.data || []);
+        if (data.pagination) {
+          setTotal(data.pagination.total);
+          setTotalPages(data.pagination.totalPages);
+        } else {
+          setTotal(data.data?.length || 0);
+          setTotalPages(1);
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching questions:', err);
+    }
+  };
 
   const handleAddQuestion = (question: QuestionWithAnswers) => {
     if (selectedQuestions.find((sq) => sq.question.id === question.id)) {
@@ -205,6 +269,8 @@ const CreateExam: React.FC = () => {
         vanDungCount,
         vanDungCaoCount,
         numberOfCodes: numberOfCodes > 0 ? numberOfCodes : undefined,
+        grade: randomGrade === '' ? null : Number(randomGrade),
+        subjectId: randomSubjectId === '' ? null : Number(randomSubjectId),
       };
 
       const response = await fetch(`${API_ENDPOINTS.EXAMS}/random`, {
@@ -300,12 +366,83 @@ const CreateExam: React.FC = () => {
               <Typography variant="h6" gutterBottom>
                 Chọn câu hỏi
               </Typography>
+
+              {/* Bộ lọc */}
+              <Box sx={{ mb: 3, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                <TextField
+                  label="Tìm theo tên"
+                  variant="outlined"
+                  size="small"
+                  value={filterName}
+                  onChange={(e) => {
+                    setFilterName(e.target.value);
+                    setPage(1);
+                  }}
+                  sx={{ minWidth: 200 }}
+                />
+                <FormControl size="small" sx={{ minWidth: 150 }}>
+                  <InputLabel>Môn học</InputLabel>
+                  <Select
+                    value={filterSubjectId}
+                    label="Môn học"
+                    onChange={(e) => {
+                      setFilterSubjectId(e.target.value === '' ? '' : Number(e.target.value));
+                      setPage(1);
+                    }}
+                  >
+                    <MenuItem value="">Tất cả</MenuItem>
+                    {subjects.map((subject) => (
+                      <MenuItem key={subject.id} value={subject.id}>
+                        {subject.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                <FormControl size="small" sx={{ minWidth: 120 }}>
+                  <InputLabel>Khối</InputLabel>
+                  <Select
+                    value={filterGrade}
+                    label="Khối"
+                    onChange={(e) => {
+                      setFilterGrade(e.target.value === '' ? '' : Number(e.target.value));
+                      setPage(1);
+                    }}
+                  >
+                    <MenuItem value="">Tất cả</MenuItem>
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((g) => (
+                      <MenuItem key={g} value={g}>
+                        Khối {g}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                <FormControl size="small" sx={{ minWidth: 150 }}>
+                  <InputLabel>Độ khó</InputLabel>
+                  <Select
+                    value={filterDifficulty}
+                    label="Độ khó"
+                    onChange={(e) => {
+                      setFilterDifficulty(e.target.value === '' ? '' : Number(e.target.value));
+                      setPage(1);
+                    }}
+                  >
+                    <MenuItem value="">Tất cả</MenuItem>
+                    <MenuItem value={1}>Nhận biết</MenuItem>
+                    <MenuItem value={2}>Thông hiểu</MenuItem>
+                    <MenuItem value={3}>Vận dụng</MenuItem>
+                    <MenuItem value={4}>Vận dụng cao</MenuItem>
+                  </Select>
+                </FormControl>
+              </Box>
+
               <TableContainer>
                 <Table size="small">
                   <TableHead>
                     <TableRow>
                       <TableCell>ID</TableCell>
                       <TableCell>Nội dung</TableCell>
+                      <TableCell>Khối</TableCell>
+                      <TableCell>Môn</TableCell>
                       <TableCell>Độ khó</TableCell>
                       <TableCell>Điểm</TableCell>
                       <TableCell align="right">Thao tác</TableCell>
@@ -321,6 +458,12 @@ const CreateExam: React.FC = () => {
                             <Typography variant="body2" sx={{ maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis' }}>
                               {q.content}
                             </Typography>
+                          </TableCell>
+                          <TableCell>{q.grade ? `Khối ${q.grade}` : 'N/A'}</TableCell>
+                          <TableCell>
+                            {q.subjectId
+                              ? subjects.find((s) => s.id === q.subjectId)?.name || 'N/A'
+                              : 'N/A'}
                           </TableCell>
                           <TableCell>
                             <Chip
@@ -370,6 +513,25 @@ const CreateExam: React.FC = () => {
                   </TableBody>
                 </Table>
               </TableContainer>
+
+              {/* Phân trang */}
+              {totalPages > 1 && (
+                <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center' }}>
+                  <Stack spacing={2}>
+                    <Pagination
+                      count={totalPages}
+                      page={page}
+                      onChange={(event, value) => setPage(value)}
+                      color="primary"
+                      showFirstButton
+                      showLastButton
+                    />
+                    <Typography variant="body2" color="text.secondary" textAlign="center">
+                      Hiển thị {availableQuestions.length} / {total} câu hỏi
+                    </Typography>
+                  </Stack>
+                </Box>
+              )}
             </Box>
 
             <Box sx={{ mb: 3 }}>
@@ -409,6 +571,43 @@ const CreateExam: React.FC = () => {
               />
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                 Điểm mỗi câu hỏi: {scorePerQuestion.toFixed(2)}
+              </Typography>
+
+              {/* Chọn khối và môn */}
+              <Box display="flex" gap={2} sx={{ mb: 2 }}>
+                <FormControl fullWidth>
+                  <InputLabel>Khối lớp (tùy chọn)</InputLabel>
+                  <Select
+                    value={randomGrade}
+                    label="Khối lớp (tùy chọn)"
+                    onChange={(e) => setRandomGrade(e.target.value === '' ? '' : Number(e.target.value))}
+                  >
+                    <MenuItem value="">Tất cả khối</MenuItem>
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((g) => (
+                      <MenuItem key={g} value={g}>
+                        Khối {g}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                <FormControl fullWidth>
+                  <InputLabel>Môn học (tùy chọn)</InputLabel>
+                  <Select
+                    value={randomSubjectId}
+                    label="Môn học (tùy chọn)"
+                    onChange={(e) => setRandomSubjectId(e.target.value === '' ? '' : Number(e.target.value))}
+                  >
+                    <MenuItem value="">Tất cả môn</MenuItem>
+                    {subjects.map((subject) => (
+                      <MenuItem key={subject.id} value={subject.id}>
+                        {subject.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Box>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Nếu chọn khối và/hoặc môn, hệ thống sẽ chỉ lấy câu hỏi trong khối và môn đó
               </Typography>
             </Box>
 

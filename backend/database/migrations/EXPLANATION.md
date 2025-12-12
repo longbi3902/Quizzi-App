@@ -62,3 +62,6 @@ Bảng `migrations` là **bắt buộc** cho hệ thống migration tự động
 - ✅ Chỉ chạy migration mới
 - ✅ An toàn khi chạy nhiều lần
 
+
+
+

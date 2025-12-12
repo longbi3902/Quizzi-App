@@ -13,3 +13,6 @@ CREATE TABLE IF NOT EXISTS exam_codes (
   UNIQUE KEY unique_exam_code (exam_id, code)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+
+
+

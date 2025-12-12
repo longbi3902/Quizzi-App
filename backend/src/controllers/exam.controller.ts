@@ -8,12 +8,33 @@ export class ExamController {
    */
   async getAllExams(req: Request, res: Response) {
     try {
-      const exams = await examService.findAll();
-      res.json({
-        success: true,
-        message: 'Lấy danh sách đề thi thành công',
-        data: exams,
-      });
+      // Kiểm tra có query params cho pagination không
+      const page = req.query.page ? Number.parseInt(req.query.page as string, 10) : undefined;
+      const limit = req.query.limit ? Number.parseInt(req.query.limit as string, 10) : undefined;
+
+      if (page !== undefined && limit !== undefined) {
+        // Sử dụng pagination
+        const result = await examService.findAllPaginated(page, limit);
+        res.json({
+          success: true,
+          message: 'Lấy danh sách đề thi thành công',
+          data: result.data,
+          pagination: {
+            total: result.total,
+            page: result.page,
+            limit: result.limit,
+            totalPages: result.totalPages,
+          },
+        });
+      } else {
+        // Lấy tất cả (backward compatibility)
+        const exams = await examService.findAll();
+        res.json({
+          success: true,
+          message: 'Lấy danh sách đề thi thành công',
+          data: exams,
+        });
+      }
     } catch (error: any) {
       console.error('Get all exams error:', error);
       res.status(500).json({

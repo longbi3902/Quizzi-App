@@ -9,3 +9,6 @@ COMMENT 'Độ khó: 1=Nhận biết, 2=Thông hiểu, 3=Vận dụng, 4=Vận d
 -- Thêm index cho độ khó để tìm kiếm nhanh hơn
 CREATE INDEX idx_difficulty ON questions(difficulty);
 
+
+
+

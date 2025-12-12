@@ -38,3 +38,6 @@ npm run migrate
 - Migration 004 phải chạy sau 001, 002, 003 để tracking hoạt động
 - Không sửa các migration đã chạy, chỉ tạo migration mới
 
+
+
+

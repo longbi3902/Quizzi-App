@@ -24,6 +24,8 @@ import {
   DialogContent,
   DialogActions,
   Chip,
+  Pagination,
+  Stack,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -43,12 +45,20 @@ const ExamManagement: React.FC = () => {
   const [examToDelete, setExamToDelete] = useState<number | null>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState<boolean>(false);
   const [examToView, setExamToView] = useState<ExamWithQuestions | null>(null);
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
 
   const fetchExams = async () => {
     try {
       setLoading(true);
       setError('');
-      const response = await fetch(API_ENDPOINTS.EXAMS);
+      const params = new URLSearchParams();
+      params.append('page', page.toString());
+      params.append('limit', limit.toString());
+      
+      const response = await fetch(`${API_ENDPOINTS.EXAMS}?${params.toString()}`);
       const data = await response.json();
 
       if (!response.ok || !data.success) {
@@ -56,6 +66,14 @@ const ExamManagement: React.FC = () => {
       }
 
       setExams(data.data || []);
+      if (data.pagination) {
+        setTotal(data.pagination.total);
+        setTotalPages(data.pagination.totalPages);
+      } else {
+        // Nếu không có pagination, dùng length của data
+        setTotal(data.data?.length || 0);
+        setTotalPages(1);
+      }
     } catch (err: any) {
       console.error('Fetch exams error:', err);
       setError(err.message || 'Không thể tải danh sách đề thi');
@@ -98,7 +116,7 @@ const ExamManagement: React.FC = () => {
 
   useEffect(() => {
     fetchExams();
-  }, []);
+  }, [page]);
 
   return (
     <Container maxWidth="lg">
@@ -208,6 +226,27 @@ const ExamManagement: React.FC = () => {
                 </TableBody>
               </Table>
             </TableContainer>
+          )}
+
+          {/* Phân trang */}
+          {total > 0 && (
+            <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center' }}>
+              <Stack spacing={2}>
+                {totalPages > 1 && (
+                  <Pagination
+                    count={totalPages}
+                    page={page}
+                    onChange={(event, value) => setPage(value)}
+                    color="primary"
+                    showFirstButton
+                    showLastButton
+                  />
+                )}
+                <Typography variant="body2" color="text.secondary" textAlign="center">
+                  Hiển thị {exams.length} / {total} đề thi
+                </Typography>
+              </Stack>
+            </Box>
           )}
         </Paper>
       </Box>
