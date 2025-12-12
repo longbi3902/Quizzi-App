@@ -15,6 +15,7 @@ interface ExamRoomRow {
   start_date: Date;
   end_date: Date;
   exam_id: number;
+  created_by: number | null;
   created_at: Date;
   updated_at: Date;
 }
@@ -58,18 +59,26 @@ export class ExamRoomService {
   }
 
   /**
-   * Lấy tất cả phòng thi
+   * Lấy tất cả phòng thi (chỉ của user)
    */
-  async findAll(): Promise<ExamRoomWithExam[]> {
+  async findAll(userId?: number | null): Promise<ExamRoomWithExam[]> {
     try {
-      const rows = await query<ExamRoomRow[]>(
-        'SELECT * FROM exam_rooms ORDER BY created_at DESC'
-      );
+      let queryStr = 'SELECT * FROM exam_rooms';
+      const params: any[] = [];
+      
+      if (userId) {
+        queryStr += ' WHERE created_by = ?';
+        params.push(userId);
+      }
+      
+      queryStr += ' ORDER BY created_at DESC';
+      
+      const rows = await query<ExamRoomRow[]>(queryStr, params);
 
       const examRooms: ExamRoomWithExam[] = [];
 
       for (const row of rows) {
-        const exam = await examService.findById(row.exam_id);
+        const exam = await examService.findById(row.exam_id, userId);
         if (exam) {
           examRooms.push({
             ...this.mapRowToExamRoom(row),
@@ -86,9 +95,9 @@ export class ExamRoomService {
   }
 
   /**
-   * Lấy tất cả phòng thi với phân trang
+   * Lấy tất cả phòng thi với phân trang (chỉ của user)
    */
-  async findAllPaginated(page: number = 1, limit: number = 10): Promise<{
+  async findAllPaginated(page: number = 1, limit: number = 10, userId?: number | null): Promise<{
     data: ExamRoomWithExam[];
     total: number;
     page: number;
@@ -96,9 +105,19 @@ export class ExamRoomService {
     totalPages: number;
   }> {
     try {
+      // Xây dựng WHERE clause
+      let whereClause = '';
+      const params: any[] = [];
+      
+      if (userId) {
+        whereClause = 'WHERE created_by = ?';
+        params.push(userId);
+      }
+      
       // Đếm tổng số records
       const countRows = await query<{ count: number }[]>(
-        'SELECT COUNT(*) as count FROM exam_rooms'
+        `SELECT COUNT(*) as count FROM exam_rooms ${whereClause}`,
+        params
       );
       const total = countRows[0]?.count || 0;
       const totalPages = Math.ceil(total / limit);
@@ -109,13 +128,14 @@ export class ExamRoomService {
 
       // Lấy dữ liệu với pagination
       const rows = await query<ExamRoomRow[]>(
-        `SELECT * FROM exam_rooms ORDER BY created_at DESC LIMIT ${limitInt} OFFSET ${offsetInt}`
+        `SELECT * FROM exam_rooms ${whereClause} ORDER BY created_at DESC LIMIT ${limitInt} OFFSET ${offsetInt}`,
+        params
       );
 
       const examRooms: ExamRoomWithExam[] = [];
 
       for (const row of rows) {
-        const exam = await examService.findById(row.exam_id);
+        const exam = await examService.findById(row.exam_id, userId);
         if (exam) {
           examRooms.push({
             ...this.mapRowToExamRoom(row),
@@ -139,20 +159,29 @@ export class ExamRoomService {
 
   /**
    * Lấy phòng thi theo ID
+   * - Nếu userId được truyền: chỉ lấy phòng thi của user đó (cho giáo viên)
+   * - Nếu userId = null/undefined: lấy bất kỳ phòng thi nào (cho học sinh xem phòng đã tham gia)
    */
-  async findById(id: number): Promise<ExamRoomWithExam | null> {
+  async findById(id: number, userId?: number | null): Promise<ExamRoomWithExam | null> {
     try {
-      const rows = await query<ExamRoomRow[]>(
-        'SELECT * FROM exam_rooms WHERE id = ?',
-        [id]
-      );
+      let queryStr = 'SELECT * FROM exam_rooms WHERE id = ?';
+      const params: any[] = [id];
+      
+      // Chỉ filter theo created_by nếu userId được truyền (và không phải null)
+      // Nếu userId = null/undefined, không filter (cho phép học sinh xem phòng đã tham gia)
+      if (userId !== undefined && userId !== null) {
+        queryStr += ' AND created_by = ?';
+        params.push(userId);
+      }
+      
+      const rows = await query<ExamRoomRow[]>(queryStr, params);
 
       if (rows.length === 0) {
         return null;
       }
 
       const examRoom = this.mapRowToExamRoom(rows[0]);
-      const exam = await examService.findById(examRoom.examId);
+      const exam = await examService.findById(examRoom.examId, userId);
 
       if (!exam) {
         return null;
@@ -171,12 +200,12 @@ export class ExamRoomService {
   /**
    * Tạo phòng thi mới
    */
-  async create(data: CreateExamRoomDTO): Promise<ExamRoomWithExam> {
+  async create(data: CreateExamRoomDTO, userId?: number | null): Promise<ExamRoomWithExam> {
     try {
-      // Validate exam exists
-      const exam = await examService.findById(data.examId);
+      // Validate exam exists (chỉ của user)
+      const exam = await examService.findById(data.examId, userId);
       if (!exam) {
-        throw new Error('Đề thi không tồn tại');
+        throw new Error('Đề thi không tồn tại hoặc bạn không có quyền sử dụng');
       }
 
       // Tạo mã phòng thi duy nhất
@@ -195,11 +224,11 @@ export class ExamRoomService {
       }
 
       const result = await query<{ insertId: number }>(
-        'INSERT INTO exam_rooms (code, name, password, start_date, end_date, exam_id) VALUES (?, ?, ?, ?, ?, ?)',
-        [code, data.name, data.password, startDate, endDate, data.examId]
+        'INSERT INTO exam_rooms (code, name, password, start_date, end_date, exam_id, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        [code, data.name, data.password, startDate, endDate, data.examId, userId || null]
       );
 
-      const examRoom = await this.findById(result.insertId);
+      const examRoom = await this.findById(result.insertId, userId);
       if (!examRoom) {
         throw new Error('Không thể tạo phòng thi');
       }
@@ -214,17 +243,17 @@ export class ExamRoomService {
   /**
    * Cập nhật phòng thi
    */
-  async update(id: number, data: UpdateExamRoomDTO): Promise<ExamRoomWithExam> {
+  async update(id: number, data: UpdateExamRoomDTO, userId?: number | null): Promise<ExamRoomWithExam> {
     try {
-      // Check if exam room exists
-      const existing = await this.findById(id);
+      // Check if exam room exists (chỉ của user)
+      const existing = await this.findById(id, userId);
       if (!existing) {
-        throw new Error('Phòng thi không tồn tại');
+        throw new Error('Phòng thi không tồn tại hoặc bạn không có quyền chỉnh sửa');
       }
 
-      // Validate exam if examId is being updated
+      // Validate exam if examId is being updated (chỉ của user)
       if (data.examId !== undefined) {
-        const exam = await examService.findById(data.examId);
+        const exam = await examService.findById(data.examId, userId);
         if (!exam) {
           throw new Error('Đề thi không tồn tại');
         }
@@ -361,12 +390,25 @@ export class ExamRoomService {
   /**
    * Xóa phòng thi
    */
-  async delete(id: number): Promise<void> {
+  async delete(id: number, userId?: number | null): Promise<void> {
     try {
-      const result = await query<{ affectedRows: number }>(
-        'DELETE FROM exam_rooms WHERE id = ?',
-        [id]
-      );
+      // Kiểm tra quyền sở hữu nếu có userId
+      if (userId) {
+        const existing = await this.findById(id, userId);
+        if (!existing) {
+          throw new Error('Phòng thi không tồn tại hoặc bạn không có quyền xóa');
+        }
+      }
+      
+      let queryStr = 'DELETE FROM exam_rooms WHERE id = ?';
+      const params: any[] = [id];
+      
+      if (userId) {
+        queryStr += ' AND created_by = ?';
+        params.push(userId);
+      }
+      
+      const result = await query<{ affectedRows: number }>(queryStr, params);
 
       if (result.affectedRows === 0) {
         throw new Error('Phòng thi không tồn tại');
@@ -389,6 +431,7 @@ export class ExamRoomService {
       startDate: row.start_date,
       endDate: row.end_date,
       examId: row.exam_id,
+      createdBy: row.created_by || null,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
     };

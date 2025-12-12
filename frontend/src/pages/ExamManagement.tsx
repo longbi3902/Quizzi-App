@@ -35,6 +35,7 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import ListIcon from '@mui/icons-material/List';
 import { API_ENDPOINTS } from '../constants/api';
 import { ExamWithQuestions } from '../types/exam.types';
+import apiClient from '../utils/apiClient';
 
 const ExamManagement: React.FC = () => {
   const navigate = useNavigate();
@@ -58,7 +59,7 @@ const ExamManagement: React.FC = () => {
       params.append('page', page.toString());
       params.append('limit', limit.toString());
       
-      const response = await fetch(`${API_ENDPOINTS.EXAMS}?${params.toString()}`);
+      const response = await apiClient.get(`${API_ENDPOINTS.EXAMS}?${params.toString()}`);
       const data = await response.json();
 
       if (!response.ok || !data.success) {
@@ -86,9 +87,7 @@ const ExamManagement: React.FC = () => {
     if (!examToDelete) return;
 
     try {
-      const response = await fetch(`${API_ENDPOINTS.EXAMS}/${examToDelete}`, {
-        method: 'DELETE',
-      });
+      const response = await apiClient.delete(`${API_ENDPOINTS.EXAMS}/${examToDelete}`);
 
       const data = await response.json();
 

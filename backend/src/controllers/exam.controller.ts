@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import examService from '../services/exam.service';
 import { CreateExamDTO, CreateExamRandomDTO, UpdateExamDTO, UpdateExamWithQuestionsDTO } from '../types/exam.types';
+import { getUserIdFromToken } from '../utils/auth';
 
 export class ExamController {
   /**
@@ -14,7 +15,14 @@ export class ExamController {
 
       if (page !== undefined && limit !== undefined) {
         // Sử dụng pagination
-        const result = await examService.findAllPaginated(page, limit);
+        const userId = getUserIdFromToken(req);
+        if (!userId) {
+          return res.status(401).json({
+            success: false,
+            message: 'Bạn cần đăng nhập để xem danh sách đề thi',
+          });
+        }
+        const result = await examService.findAllPaginated(page, limit, userId);
         res.json({
           success: true,
           message: 'Lấy danh sách đề thi thành công',
@@ -59,7 +67,14 @@ export class ExamController {
         });
       }
 
-      const exam = await examService.findById(id);
+      const userId = getUserIdFromToken(req);
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          message: 'Bạn cần đăng nhập để xem đề thi',
+        });
+      }
+      const exam = await examService.findById(id, userId);
 
       if (!exam) {
         return res.status(404).json({
@@ -90,7 +105,14 @@ export class ExamController {
     try {
       const examData: CreateExamDTO = req.body;
 
-      const exam = await examService.create(examData);
+      const userId = getUserIdFromToken(req);
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          message: 'Bạn cần đăng nhập để tạo đề thi',
+        });
+      }
+      const exam = await examService.create(examData, userId);
 
       res.status(201).json({
         success: true,
@@ -114,7 +136,14 @@ export class ExamController {
     try {
       const examData: CreateExamRandomDTO = req.body;
 
-      const exam = await examService.createRandom(examData);
+      const userId = getUserIdFromToken(req);
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          message: 'Bạn cần đăng nhập để tạo đề thi',
+        });
+      }
+      const exam = await examService.createRandom(examData, userId);
 
       res.status(201).json({
         success: true,
@@ -147,7 +176,14 @@ export class ExamController {
 
       const examData: UpdateExamDTO = req.body;
 
-      const exam = await examService.update(id, examData);
+      const userId = getUserIdFromToken(req);
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          message: 'Bạn cần đăng nhập để cập nhật đề thi',
+        });
+      }
+      const exam = await examService.update(id, examData, userId);
 
       if (!exam) {
         return res.status(404).json({
@@ -187,7 +223,14 @@ export class ExamController {
 
       const examData: UpdateExamWithQuestionsDTO = req.body;
 
-      const exam = await examService.updateWithQuestions(id, examData);
+      const userId = getUserIdFromToken(req);
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          message: 'Bạn cần đăng nhập để cập nhật đề thi',
+        });
+      }
+      const exam = await examService.updateWithQuestions(id, examData, userId);
 
       if (!exam) {
         return res.status(404).json({
@@ -225,7 +268,14 @@ export class ExamController {
         });
       }
 
-      const deleted = await examService.delete(id);
+      const userId = getUserIdFromToken(req);
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          message: 'Bạn cần đăng nhập để xóa đề thi',
+        });
+      }
+      const deleted = await examService.delete(id, userId);
 
       if (!deleted) {
         return res.status(404).json({

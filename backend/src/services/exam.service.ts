@@ -17,6 +17,7 @@ interface ExamRow {
   name: string;
   duration: number;
   max_score: number;
+  created_by: number | null;
   created_at: Date;
   updated_at: Date;
 }
@@ -58,9 +59,9 @@ export class ExamService {
   }
 
   /**
-   * Lấy tất cả đề thi với phân trang
+   * Lấy tất cả đề thi với phân trang (chỉ của user)
    */
-  async findAllPaginated(page: number = 1, limit: number = 10): Promise<{
+  async findAllPaginated(page: number = 1, limit: number = 10, userId?: number | null): Promise<{
     data: ExamWithQuestions[];
     total: number;
     page: number;
@@ -68,9 +69,19 @@ export class ExamService {
     totalPages: number;
   }> {
     try {
+      // Xây dựng WHERE clause
+      let whereClause = '';
+      const params: any[] = [];
+      
+      if (userId) {
+        whereClause = 'WHERE created_by = ?';
+        params.push(userId);
+      }
+      
       // Đếm tổng số records
       const countRows = await query<{ count: number }[]>(
-        'SELECT COUNT(*) as count FROM exams'
+        `SELECT COUNT(*) as count FROM exams ${whereClause}`,
+        params
       );
       const total = countRows[0]?.count || 0;
       const totalPages = Math.ceil(total / limit);
@@ -81,7 +92,8 @@ export class ExamService {
 
       // Lấy dữ liệu với pagination
       const examRows = await query<ExamRow[]>(
-        `SELECT * FROM exams ORDER BY created_at DESC LIMIT ${limitInt} OFFSET ${offsetInt}`
+        `SELECT * FROM exams ${whereClause} ORDER BY created_at DESC LIMIT ${limitInt} OFFSET ${offsetInt}`,
+        params
       );
 
       const examsWithQuestions: ExamWithQuestions[] = [];
@@ -108,14 +120,19 @@ export class ExamService {
   }
 
   /**
-   * Lấy đề thi theo ID
+   * Lấy đề thi theo ID (chỉ của user)
    */
-  async findById(id: number): Promise<ExamWithQuestions | null> {
+  async findById(id: number, userId?: number | null): Promise<ExamWithQuestions | null> {
     try {
-      const results = await query<ExamRow[]>(
-        'SELECT * FROM exams WHERE id = ?',
-        [id]
-      );
+      let queryStr = 'SELECT * FROM exams WHERE id = ?';
+      const params: any[] = [id];
+      
+      if (userId) {
+        queryStr += ' AND created_by = ?';
+        params.push(userId);
+      }
+      
+      const results = await query<ExamRow[]>(queryStr, params);
 
       if (results.length === 0) {
         return null;
@@ -137,7 +154,7 @@ export class ExamService {
   /**
    * Tạo đề thi tự chọn
    */
-  async create(examData: CreateExamDTO): Promise<ExamWithQuestions> {
+  async create(examData: CreateExamDTO, userId?: number | null): Promise<ExamWithQuestions> {
     try {
       // Validate
       if (!examData.name || examData.name.trim() === '') {
@@ -178,8 +195,8 @@ export class ExamService {
 
       // Insert đề thi
       const examResult = await query<{ insertId: number }>(
-        'INSERT INTO exams (name, duration, max_score) VALUES (?, ?, ?)',
-        [examData.name.trim(), examData.duration, examData.maxScore]
+        'INSERT INTO exams (name, duration, max_score, created_by) VALUES (?, ?, ?, ?)',
+        [examData.name.trim(), examData.duration, examData.maxScore, userId || null]
       );
 
       const examId = examResult.insertId;
@@ -214,7 +231,7 @@ export class ExamService {
   /**
    * Tạo đề thi random
    */
-  async createRandom(examData: CreateExamRandomDTO): Promise<ExamWithQuestions> {
+  async createRandom(examData: CreateExamRandomDTO, userId?: number | null): Promise<ExamWithQuestions> {
     try {
       // Validate
       if (!examData.name || examData.name.trim() === '') {
@@ -342,7 +359,7 @@ export class ExamService {
         maxScore: examData.maxScore,
         questions: selectedQuestions,
         numberOfCodes: examData.numberOfCodes || 0,
-      });
+      }, userId);
     } catch (error) {
       console.error('Error creating random exam:', error);
       throw error;
@@ -395,9 +412,9 @@ export class ExamService {
   }
 
   /**
-   * Cập nhật đề thi
+   * Cập nhật đề thi (chỉ người tạo mới được cập nhật)
    */
-  async update(id: number, examData: UpdateExamDTO): Promise<ExamWithQuestions | null> {
+  async update(id: number, examData: UpdateExamDTO, userId?: number | null): Promise<ExamWithQuestions | null> {
     try {
       const updates: string[] = [];
       const values: any[] = [];
@@ -424,14 +441,21 @@ export class ExamService {
       }
 
       if (updates.length === 0) {
-        return await this.findById(id);
+        return await this.findById(id, userId);
       }
 
       values.push(id);
+      
+      // Thêm điều kiện created_by nếu có userId
+      let whereClause = 'WHERE id = ?';
+      if (userId) {
+        whereClause += ' AND created_by = ?';
+        values.push(userId);
+      }
 
-      await query(`UPDATE exams SET ${updates.join(', ')} WHERE id = ?`, values);
+      await query(`UPDATE exams SET ${updates.join(', ')} ${whereClause}`, values);
 
-      return await this.findById(id);
+      return await this.findById(id, userId);
     } catch (error) {
       console.error('Error updating exam:', error);
       throw error;
@@ -443,13 +467,14 @@ export class ExamService {
    */
   async updateWithQuestions(
     id: number,
-    examData: UpdateExamWithQuestionsDTO
+    examData: UpdateExamWithQuestionsDTO,
+    userId?: number | null
   ): Promise<ExamWithQuestions | null> {
     try {
       // Kiểm tra đề thi có tồn tại không
-      const existingExam = await this.findById(id);
+      const existingExam = await this.findById(id, userId);
       if (!existingExam) {
-        throw new Error('Không tìm thấy đề thi');
+        throw new Error('Không tìm thấy đề thi hoặc bạn không có quyền chỉnh sửa');
       }
 
       // Cập nhật thông tin đề thi
@@ -458,7 +483,7 @@ export class ExamService {
         duration: examData.duration,
         maxScore: examData.maxScore,
       };
-      await this.update(id, updateData);
+      await this.update(id, updateData, userId);
 
       // Nếu có cập nhật câu hỏi
       if (examData.questions !== undefined) {
@@ -504,7 +529,7 @@ export class ExamService {
       }
 
       // Lấy lại đề thi đã cập nhật
-      return await this.findById(id);
+      return await this.findById(id, userId);
     } catch (error) {
       console.error('Error updating exam with questions:', error);
       throw error;
@@ -514,12 +539,25 @@ export class ExamService {
   /**
    * Xóa đề thi
    */
-  async delete(id: number): Promise<boolean> {
+  async delete(id: number, userId?: number | null): Promise<boolean> {
     try {
-      const result = await query<{ affectedRows: number }>(
-        'DELETE FROM exams WHERE id = ?',
-        [id]
-      );
+      // Kiểm tra quyền sở hữu nếu có userId
+      if (userId) {
+        const existing = await this.findById(id, userId);
+        if (!existing) {
+          throw new Error('Không tìm thấy đề thi hoặc bạn không có quyền xóa');
+        }
+      }
+      
+      let queryStr = 'DELETE FROM exams WHERE id = ?';
+      const params: any[] = [id];
+      
+      if (userId) {
+        queryStr += ' AND created_by = ?';
+        params.push(userId);
+      }
+      
+      const result = await query<{ affectedRows: number }>(queryStr, params);
 
       return result.affectedRows > 0;
     } catch (error) {
@@ -629,6 +667,7 @@ export class ExamService {
       name: row.name,
       duration: row.duration,
       maxScore: Number(row.max_score),
+      createdBy: row.created_by || null,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
     };

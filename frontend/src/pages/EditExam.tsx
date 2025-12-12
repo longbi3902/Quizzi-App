@@ -30,6 +30,7 @@ import { ExamWithQuestions, UpdateExamWithQuestionsDTO } from '../types/exam.typ
 import { QuestionWithAnswers } from '../types/question.types';
 import { useToast } from '../contexts/ToastContext';
 import { getDifficultyName, getDifficultyColor } from '../utils/questionUtils';
+import apiClient from '../utils/apiClient';
 
 const EditExam: React.FC = () => {
   const navigate = useNavigate();
@@ -61,7 +62,7 @@ const EditExam: React.FC = () => {
         setLoadingData(true);
         
         // Load đề thi
-        const examResponse = await fetch(`${API_ENDPOINTS.EXAMS}/${examId}`);
+        const examResponse = await apiClient.get(`${API_ENDPOINTS.EXAMS}/${examId}`);
         const examData = await examResponse.json();
         if (!examResponse.ok || !examData.success) {
           throw new Error(examData.message || 'Không tìm thấy đề thi');
@@ -80,7 +81,7 @@ const EditExam: React.FC = () => {
         );
 
         // Load danh sách câu hỏi
-        const questionsResponse = await fetch(API_ENDPOINTS.QUESTIONS);
+        const questionsResponse = await apiClient.get(API_ENDPOINTS.QUESTIONS);
         const questionsData = await questionsResponse.json();
         if (questionsResponse.ok && questionsData.success) {
           setAvailableQuestions(questionsData.data || []);
@@ -157,11 +158,7 @@ const EditExam: React.FC = () => {
         })),
       };
 
-      const response = await fetch(`${API_ENDPOINTS.EXAMS}/${examId}/questions`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(examData),
-      });
+      const response = await apiClient.put(`${API_ENDPOINTS.EXAMS}/${examId}/questions`, examData);
 
       const data = await response.json();
       if (!response.ok || !data.success) {

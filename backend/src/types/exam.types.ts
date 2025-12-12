@@ -5,6 +5,7 @@ export interface Exam {
   name: string;
   duration: number; // Thời gian thi (phút)
   maxScore: number; // Tổng điểm tối đa
+  createdBy: number | null; // ID người tạo (giáo viên)
   createdAt: Date;
   updatedAt: Date;
 }

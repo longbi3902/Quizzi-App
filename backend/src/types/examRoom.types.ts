@@ -8,6 +8,7 @@ export interface ExamRoom {
   startDate: Date; // Ngày giờ bắt đầu cho phép thi
   endDate: Date; // Ngày giờ kết thúc cho phép thi
   examId: number;
+  createdBy: number | null; // ID người tạo (giáo viên)
   createdAt: Date;
   updatedAt: Date;
   exam?: ExamWithQuestions; // Thông tin đề thi (khi join)

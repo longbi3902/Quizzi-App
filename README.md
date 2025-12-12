@@ -5,11 +5,12 @@
 1. [Tổng Quan Hệ Thống](#tổng-quan-hệ-thống)
 2. [Công Nghệ Sử Dụng](#công-nghệ-sử-dụng)
 3. [Tính Năng Chính](#tính-năng-chính)
-4. [Luồng Nghiệp Vụ](#luồng-nghiệp-vụ)
-5. [Cấu Trúc Database](#cấu-trúc-database)
-6. [API Endpoints](#api-endpoints)
-7. [Cài Đặt và Chạy](#cài-đặt-và-chạy)
-8. [Cấu Trúc Dự Án](#cấu-trúc-dự-án)
+4. [Logic Cá Nhân Hóa](#logic-cá-nhân-hóa-data-isolation)
+5. [Luồng Nghiệp Vụ](#luồng-nghiệp-vụ)
+6. [Cấu Trúc Database](#cấu-trúc-database)
+7. [API Endpoints](#api-endpoints)
+8. [Cài Đặt và Chạy](#cài-đặt-và-chạy)
+9. [Cấu Trúc Dự Án](#cấu-trúc-dự-án)
 
 ---
 
@@ -127,6 +128,160 @@
 - ✅ Xem danh sách các phòng thi đã tham gia
 - ✅ Xem kết quả thi của từng phòng thi
 - ✅ Xem chi tiết bài làm đã nộp
+
+---
+
+## 🔐 Logic Cá Nhân Hóa (Data Isolation)
+
+Hệ thống đảm bảo mỗi người dùng chỉ có thể xem và thao tác với dữ liệu của chính mình thông qua cơ chế **cá nhân hóa dữ liệu** (Data Isolation).
+
+### Nguyên Tắc Cơ Bản
+
+1. **Mỗi bản ghi có trường `created_by`**: Lưu ID của người tạo (giáo viên)
+2. **Filter theo `user_id`**: Tất cả queries đều filter theo `user_id` từ JWT token
+3. **Authorization check**: Kiểm tra quyền sở hữu trước khi cho phép sửa/xóa
+
+### Cơ Chế Cá Nhân Hóa Cho Giáo Viên
+
+#### 1. Câu Hỏi (Questions)
+- **Trường `created_by`**: Lưu ID giáo viên tạo câu hỏi
+- **Filter trong queries**:
+  ```sql
+  SELECT * FROM questions WHERE created_by = ? [AND filters...]
+  ```
+- **Khi tạo mới**: Tự động lưu `created_by = userId` từ JWT token
+- **Khi sửa/xóa**: Kiểm tra `created_by = userId` trước khi cho phép
+- **Kết quả**: Giáo viên A chỉ thấy câu hỏi của giáo viên A
+
+#### 2. Đề Thi (Exams)
+- **Trường `created_by`**: Lưu ID giáo viên tạo đề thi
+- **Filter trong queries**:
+  ```sql
+  SELECT * FROM exams WHERE created_by = ? [AND filters...]
+  ```
+- **Khi tạo mới**: Tự động lưu `created_by = userId`
+- **Khi sửa/xóa**: Kiểm tra `created_by = userId` trước khi cho phép
+- **Khi tạo đề thi random**: Chỉ lấy câu hỏi của chính giáo viên đó (filter `created_by`)
+- **Kết quả**: Giáo viên A chỉ thấy đề thi của giáo viên A
+
+#### 3. Phòng Thi (Exam Rooms)
+- **Trường `created_by`**: Lưu ID giáo viên tạo phòng thi
+- **Filter trong queries**:
+  ```sql
+  SELECT * FROM exam_rooms WHERE created_by = ? [AND filters...]
+  ```
+- **Khi tạo mới**: Tự động lưu `created_by = userId`
+- **Khi chọn đề thi**: Chỉ hiển thị đề thi của chính giáo viên đó
+- **Khi sửa/xóa**: Kiểm tra `created_by = userId` trước khi cho phép
+- **Kết quả**: Giáo viên A chỉ thấy phòng thi của giáo viên A
+
+### Cơ Chế Cá Nhân Hóa Cho Học Sinh
+
+#### 1. Phòng Thi Đã Tham Gia
+- **Bảng `exam_room_participants`**: Lưu lịch sử tham gia phòng thi
+- **Filter theo `user_id`**:
+  ```sql
+  SELECT er.* FROM exam_room_participants erp
+  INNER JOIN exam_rooms er ON erp.exam_room_id = er.id
+  WHERE erp.user_id = ?
+  ```
+- **Khi tham gia phòng thi**: Tự động insert vào `exam_room_participants`
+- **Kết quả**: Học sinh chỉ thấy phòng thi mà mình đã tham gia
+
+#### 2. Kết Quả Thi
+- **Bảng `exam_results`**: Lưu kết quả thi của học sinh
+- **Filter theo `user_id`**:
+  ```sql
+  SELECT * FROM exam_results WHERE user_id = ? AND exam_room_id = ?
+  ```
+- **Khi làm bài**: Tự động lưu `user_id` từ JWT token
+- **Khi xem kết quả**: Chỉ lấy kết quả của chính học sinh đó
+- **Kết quả**: Học sinh chỉ thấy kết quả thi của mình
+
+#### 3. Xem Phòng Thi và Đề Thi
+- **Logic đặc biệt**: Khi học sinh xem phòng thi đã tham gia, hệ thống **không filter theo `created_by`**
+- **Lý do**: Học sinh cần xem phòng thi và đề thi của giáo viên khác (nếu đã tham gia)
+- **Implementation**:
+  ```typescript
+  // Trong ExamRoomService.findById()
+  if (userId !== undefined && userId !== null) {
+    // Filter theo created_by (cho giáo viên)
+    queryStr += ' AND created_by = ?';
+  }
+  // Nếu userId = undefined/null (cho học sinh), không filter
+  ```
+- **Kết quả**: Học sinh có thể xem phòng thi và đề thi mà mình đã tham gia, bất kể ai tạo
+
+### Luồng Xử Lý Request
+
+#### Backend Flow
+```
+1. Request đến API endpoint
+2. Middleware authenticateToken() → Lấy JWT token
+3. Middleware getUserIdFromToken() → Extract userId từ token
+4. Controller → Truyền userId vào Service
+5. Service → Filter queries theo userId (hoặc created_by)
+6. Response → Chỉ trả về dữ liệu của user đó
+```
+
+#### Frontend Flow
+```
+1. User đăng nhập → Lưu JWT token vào localStorage
+2. Mỗi API call → apiClient tự động attach token vào header
+3. Backend nhận token → Extract userId và filter data
+4. Response → Chỉ nhận được dữ liệu của chính user đó
+```
+
+### Ví Dụ Cụ Thể
+
+#### Ví dụ 1: Giáo viên A tạo câu hỏi
+```
+1. Giáo viên A đăng nhập → userId = 1
+2. Tạo câu hỏi mới → INSERT INTO questions (..., created_by) VALUES (..., 1)
+3. Khi xem danh sách → SELECT * FROM questions WHERE created_by = 1
+4. Kết quả: Chỉ thấy câu hỏi của giáo viên A
+```
+
+#### Ví dụ 2: Giáo viên B không thấy câu hỏi của giáo viên A
+```
+1. Giáo viên B đăng nhập → userId = 2
+2. Xem danh sách câu hỏi → SELECT * FROM questions WHERE created_by = 2
+3. Kết quả: Chỉ thấy câu hỏi của giáo viên B (không thấy của giáo viên A)
+```
+
+#### Ví dụ 3: Học sinh tham gia phòng thi của giáo viên A
+```
+1. Học sinh đăng nhập → userId = 10
+2. Nhập mã phòng thi → Verify thành công
+3. Insert vào exam_room_participants → (user_id=10, exam_room_id=X)
+4. Khi xem danh sách phòng thi đã tham gia:
+   SELECT er.* FROM exam_room_participants erp
+   INNER JOIN exam_rooms er ON erp.exam_room_id = er.id
+   WHERE erp.user_id = 10
+5. Kết quả: Chỉ thấy phòng thi mà học sinh đã tham gia
+```
+
+#### Ví dụ 4: Học sinh xem phòng thi đã tham gia (không filter created_by)
+```
+1. Học sinh xem phòng thi ID = 5 (của giáo viên A)
+2. Service.findById(5, undefined) → Không filter theo created_by
+3. Query: SELECT * FROM exam_rooms WHERE id = 5
+4. Kết quả: Học sinh có thể xem phòng thi của giáo viên A (vì đã tham gia)
+```
+
+### Bảo Mật
+
+1. **JWT Token**: Mỗi request phải có valid JWT token
+2. **User ID từ Token**: Không tin tưởng client, luôn lấy userId từ token
+3. **SQL Injection Prevention**: Sử dụng prepared statements với parameters
+4. **Authorization Check**: Kiểm tra quyền sở hữu trước khi sửa/xóa
+5. **No Direct Access**: Không cho phép truy cập trực tiếp dữ liệu của người khác
+
+### Migration và Backward Compatibility
+
+- **Migration 018**: Thêm cột `created_by` vào các bảng `questions`, `exams`, `exam_rooms`
+- **Default Value**: Các bản ghi cũ được gán `created_by` = ID của giáo viên đầu tiên
+- **New Records**: Tất cả bản ghi mới tự động có `created_by` từ JWT token
 
 ---
 
@@ -299,6 +454,7 @@
 - `name`: Tên đề thi
 - `duration`: Thời gian thi (phút)
 - `max_score`: Tổng điểm tối đa
+- `created_by`: ID giáo viên tạo (nullable, FK → users) - **Dùng cho cá nhân hóa**
 - `created_at`: Thời gian tạo
 - `updated_at`: Thời gian cập nhật
 
@@ -325,6 +481,7 @@
 - `exam_id`: ID đề thi (FK → exams)
 - `start_date`: Thời gian bắt đầu
 - `end_date`: Thời gian kết thúc
+- `created_by`: ID giáo viên tạo (nullable, FK → users) - **Dùng cho cá nhân hóa**
 - `created_at`: Thời gian tạo
 - `updated_at`: Thời gian cập nhật
 

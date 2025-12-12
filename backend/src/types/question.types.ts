@@ -20,6 +20,7 @@ export interface Question {
   difficulty: number; // 1-4
   grade: number | null; // Khối lớp (1-12)
   subjectId: number | null; // ID môn học
+  createdBy: number | null; // ID người tạo (giáo viên)
   createdAt: Date;
 }
 

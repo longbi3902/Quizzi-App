@@ -31,6 +31,7 @@ import { QuestionWithAnswers, CreateAnswerDTO, UpdateQuestionDTO, QuestionDiffic
 import { Subject } from '../types/subject.types';
 import { difficultyOptions } from '../utils/questionUtils';
 import { useToast } from '../contexts/ToastContext';
+import apiClient from '../utils/apiClient';
 
 interface AnswerFormData {
   id?: number;
@@ -69,7 +70,7 @@ const EditQuestion: React.FC = () => {
     const fetchQuestion = async () => {
       try {
         setLoadingData(true);
-        const response = await fetch(`${API_ENDPOINTS.QUESTIONS}/${questionId}`);
+        const response = await apiClient.get(`${API_ENDPOINTS.QUESTIONS}/${questionId}`);
         const data = await response.json();
 
         if (!response.ok || !data.success) {
@@ -106,7 +107,7 @@ const EditQuestion: React.FC = () => {
     const fetchSubjects = async () => {
       try {
         setLoadingSubjects(true);
-        const response = await fetch(API_ENDPOINTS.SUBJECTS);
+        const response = await apiClient.get(API_ENDPOINTS.SUBJECTS);
         const data = await response.json();
 
         if (response.ok && data.success) {
@@ -212,13 +213,7 @@ const EditQuestion: React.FC = () => {
         subjectId: subjectId === '' ? null : Number(subjectId),
       };
 
-      const questionResponse = await fetch(`${API_ENDPOINTS.QUESTIONS}/${questionId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(questionData),
-      });
+      const questionResponse = await apiClient.put(`${API_ENDPOINTS.QUESTIONS}/${questionId}`, questionData);
 
       const questionResult = await questionResponse.json();
       if (!questionResponse.ok || !questionResult.success) {
@@ -231,15 +226,9 @@ const EditQuestion: React.FC = () => {
       for (const answer of answers) {
         if (answer.id) {
           // Cập nhật đáp án đã có
-          const answerResponse = await fetch(`${API_ENDPOINTS.QUESTIONS}/answers/${answer.id}`, {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              content: answer.content.trim(),
-              isTrue: answer.isTrue,
-            }),
+          const answerResponse = await apiClient.put(`${API_ENDPOINTS.QUESTIONS}/answers/${answer.id}`, {
+            content: answer.content.trim(),
+            isTrue: answer.isTrue,
           });
 
           if (!answerResponse.ok) {

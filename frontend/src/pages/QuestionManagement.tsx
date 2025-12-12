@@ -46,6 +46,7 @@ import { API_ENDPOINTS } from '../constants/api';
 import { QuestionWithAnswers } from '../types/question.types';
 import { Subject } from '../types/subject.types';
 import { getDifficultyName, getDifficultyColor } from '../utils/questionUtils';
+import apiClient from '../utils/apiClient';
 
 const QuestionManagement: React.FC = () => {
   const navigate = useNavigate();
@@ -73,7 +74,7 @@ const QuestionManagement: React.FC = () => {
       params.append('page', page.toString());
       params.append('limit', limit.toString());
       
-      const response = await fetch(`${API_ENDPOINTS.QUESTIONS}?${params.toString()}`);
+      const response = await apiClient.get(`${API_ENDPOINTS.QUESTIONS}?${params.toString()}`);
       const data = await response.json();
 
       if (!response.ok || !data.success) {
@@ -104,9 +105,7 @@ const QuestionManagement: React.FC = () => {
     if (!questionToDelete) return;
 
     try {
-      const response = await fetch(`${API_ENDPOINTS.QUESTIONS}/${questionToDelete}`, {
-        method: 'DELETE',
-      });
+      const response = await apiClient.delete(`${API_ENDPOINTS.QUESTIONS}/${questionToDelete}`);
 
       const data = await response.json();
 
@@ -147,7 +146,7 @@ const QuestionManagement: React.FC = () => {
   useEffect(() => {
     const fetchSubjects = async () => {
       try {
-        const response = await fetch(API_ENDPOINTS.SUBJECTS);
+        const response = await apiClient.get(API_ENDPOINTS.SUBJECTS);
         const data = await response.json();
         if (response.ok && data.success) {
           setSubjects(data.data || []);

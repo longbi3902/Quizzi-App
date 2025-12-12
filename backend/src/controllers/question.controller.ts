@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import questionService from '../services/question.service';
 import { CreateQuestionDTO, UpdateQuestionDTO, UpdateAnswerDTO } from '../types/question.types';
+import { getUserIdFromToken } from '../utils/auth';
 
 export class QuestionController {
   /**
@@ -27,7 +28,14 @@ export class QuestionController {
             : undefined,
         };
 
-        const result = await questionService.findAllPaginated(page, limit, filters);
+        const userId = getUserIdFromToken(req);
+        if (!userId) {
+          return res.status(401).json({
+            success: false,
+            message: 'Bạn cần đăng nhập để xem danh sách câu hỏi',
+          });
+        }
+        const result = await questionService.findAllPaginated(page, limit, userId, filters);
         res.json({
           success: true,
           message: 'Lấy danh sách câu hỏi thành công',
@@ -41,7 +49,14 @@ export class QuestionController {
         });
       } else {
         // Lấy tất cả (backward compatibility)
-        const questions = await questionService.findAll();
+        const userId = getUserIdFromToken(req);
+        if (!userId) {
+          return res.status(401).json({
+            success: false,
+            message: 'Bạn cần đăng nhập để xem danh sách câu hỏi',
+          });
+        }
+        const questions = await questionService.findAll(userId);
         res.json({
           success: true,
           message: 'Lấy danh sách câu hỏi thành công',
@@ -72,7 +87,8 @@ export class QuestionController {
         });
       }
 
-      const question = await questionService.findById(id);
+      const userId = getUserIdFromToken(req);
+      const question = await questionService.findById(id, userId);
       
       if (!question) {
         return res.status(404).json({
@@ -137,7 +153,14 @@ export class QuestionController {
         }
       }
 
-      const question = await questionService.create(questionData);
+      const userId = getUserIdFromToken(req);
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          message: 'Bạn cần đăng nhập để tạo câu hỏi',
+        });
+      }
+      const question = await questionService.create(questionData, userId);
 
       res.status(201).json({
         success: true,
@@ -170,7 +193,14 @@ export class QuestionController {
 
       const questionData: UpdateQuestionDTO = req.body;
 
-      const question = await questionService.update(id, questionData);
+      const userId = getUserIdFromToken(req);
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          message: 'Bạn cần đăng nhập để cập nhật câu hỏi',
+        });
+      }
+      const question = await questionService.update(id, questionData, userId);
       
       if (!question) {
         return res.status(404).json({
@@ -208,7 +238,14 @@ export class QuestionController {
         });
       }
 
-      const deleted = await questionService.delete(id);
+      const userId = getUserIdFromToken(req);
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          message: 'Bạn cần đăng nhập để xóa câu hỏi',
+        });
+      }
+      const deleted = await questionService.delete(id, userId);
       
       if (!deleted) {
         return res.status(404).json({

@@ -19,7 +19,14 @@ export class ExamRoomController {
 
       if (page !== undefined && limit !== undefined) {
         // Sử dụng pagination
-        const result = await examRoomService.findAllPaginated(page, limit);
+        const userId = getUserIdFromToken(req);
+        if (!userId) {
+          return res.status(401).json({
+            success: false,
+            message: 'Bạn cần đăng nhập để xem danh sách phòng thi',
+          });
+        }
+        const result = await examRoomService.findAllPaginated(page, limit, userId);
         res.json({
           success: true,
           message: 'Lấy danh sách phòng thi thành công',
@@ -33,7 +40,14 @@ export class ExamRoomController {
         });
       } else {
         // Lấy tất cả (backward compatibility)
-        const examRooms = await examRoomService.findAll();
+        const userId = getUserIdFromToken(req);
+        if (!userId) {
+          return res.status(401).json({
+            success: false,
+            message: 'Bạn cần đăng nhập để xem danh sách phòng thi',
+          });
+        }
+        const examRooms = await examRoomService.findAll(userId);
         res.json({
           success: true,
           message: 'Lấy danh sách phòng thi thành công',
@@ -64,7 +78,14 @@ export class ExamRoomController {
         });
       }
 
-      const examRoom = await examRoomService.findById(id);
+      const userId = getUserIdFromToken(req);
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          message: 'Bạn cần đăng nhập để xem phòng thi',
+        });
+      }
+      const examRoom = await examRoomService.findById(id, userId);
 
       if (!examRoom) {
         return res.status(404).json({
@@ -103,7 +124,14 @@ export class ExamRoomController {
         });
       }
 
-      const examRoom = await examRoomService.create(examRoomData);
+      const userId = getUserIdFromToken(req);
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          message: 'Bạn cần đăng nhập để tạo phòng thi',
+        });
+      }
+      const examRoom = await examRoomService.create(examRoomData, userId);
 
       res.status(201).json({
         success: true,
@@ -136,7 +164,14 @@ export class ExamRoomController {
 
       const examRoomData: UpdateExamRoomDTO = req.body;
 
-      const examRoom = await examRoomService.update(id, examRoomData);
+      const userId = getUserIdFromToken(req);
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          message: 'Bạn cần đăng nhập để cập nhật phòng thi',
+        });
+      }
+      const examRoom = await examRoomService.update(id, examRoomData, userId);
 
       res.json({
         success: true,
@@ -247,7 +282,14 @@ export class ExamRoomController {
         });
       }
 
-      await examRoomService.delete(id);
+      const userId = getUserIdFromToken(req);
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          message: 'Bạn cần đăng nhập để xóa phòng thi',
+        });
+      }
+      await examRoomService.delete(id, userId);
 
       res.json({
         success: true,

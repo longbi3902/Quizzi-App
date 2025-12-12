@@ -34,6 +34,7 @@ import { CreateQuestionDTO, CreateAnswerDTO, QuestionDifficulty } from '../types
 import { Subject } from '../types/subject.types';
 import { difficultyOptions } from '../utils/questionUtils';
 import { useToast } from '../contexts/ToastContext';
+import apiClient from '../utils/apiClient';
 
 interface AnswerFormData {
   content: string;
@@ -138,7 +139,7 @@ const AddQuestion: React.FC = () => {
     const fetchSubjects = async () => {
       try {
         setLoadingSubjects(true);
-        const response = await fetch(API_ENDPOINTS.SUBJECTS);
+        const response = await apiClient.get(API_ENDPOINTS.SUBJECTS);
         const data = await response.json();
 
         if (response.ok && data.success) {
@@ -183,13 +184,7 @@ const AddQuestion: React.FC = () => {
       };
 
       // Gọi API tạo câu hỏi
-      const response = await fetch(API_ENDPOINTS.QUESTIONS, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(questionData),
-      });
+      const response = await apiClient.post(API_ENDPOINTS.QUESTIONS, questionData);
 
       const data = await response.json();
 

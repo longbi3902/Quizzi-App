@@ -16,6 +16,7 @@ interface QuestionRow {
   difficulty: number;
   grade: number | null;
   subject_id: number | null;
+  created_by: number | null;
   created_at: Date;
 }
 
@@ -29,13 +30,21 @@ interface AnswerRow {
 
 export class QuestionService {
   /**
-   * Lấy tất cả câu hỏi kèm đáp án
+   * Lấy tất cả câu hỏi kèm đáp án (chỉ của user)
    */
-  async findAll(): Promise<QuestionWithAnswers[]> {
+  async findAll(userId?: number | null): Promise<QuestionWithAnswers[]> {
     try {
-      const questionRows = await query<QuestionRow[]>(
-        'SELECT * FROM questions ORDER BY created_at DESC'
-      );
+      let queryStr = 'SELECT * FROM questions';
+      const params: any[] = [];
+      
+      if (userId) {
+        queryStr += ' WHERE created_by = ?';
+        params.push(userId);
+      }
+      
+      queryStr += ' ORDER BY created_at DESC';
+      
+      const questionRows = await query<QuestionRow[]>(queryStr, params);
 
       const questionsWithAnswers: QuestionWithAnswers[] = [];
 
@@ -60,6 +69,7 @@ export class QuestionService {
   async findAllPaginated(
     page: number = 1,
     limit: number = 10,
+    userId?: number | null,
     filters?: {
       name?: string;
       subjectId?: number | null;
@@ -77,10 +87,15 @@ export class QuestionService {
       // Xây dựng WHERE clause
       let whereClause = '';
       const params: any[] = [];
+      const conditions: string[] = [];
+
+      // Filter theo user (chỉ lấy câu hỏi của giáo viên đó)
+      if (userId) {
+        conditions.push('created_by = ?');
+        params.push(userId);
+      }
 
       if (filters) {
-        const conditions: string[] = [];
-
         if (filters.name && filters.name.trim()) {
           conditions.push('content LIKE ?');
           params.push(`%${filters.name.trim()}%`);
@@ -100,10 +115,10 @@ export class QuestionService {
           conditions.push('difficulty = ?');
           params.push(filters.difficulty);
         }
+      }
 
-        if (conditions.length > 0) {
-          whereClause = 'WHERE ' + conditions.join(' AND ');
-        }
+      if (conditions.length > 0) {
+        whereClause = 'WHERE ' + conditions.join(' AND ');
       }
 
       // Đếm tổng số records
@@ -148,14 +163,19 @@ export class QuestionService {
   }
 
   /**
-   * Lấy câu hỏi theo ID kèm đáp án
+   * Lấy câu hỏi theo ID kèm đáp án (chỉ của user)
    */
-  async findById(id: number): Promise<QuestionWithAnswers | null> {
+  async findById(id: number, userId?: number | null): Promise<QuestionWithAnswers | null> {
     try {
-      const results = await query<QuestionRow[]>(
-        'SELECT * FROM questions WHERE id = ?',
-        [id]
-      );
+      let queryStr = 'SELECT * FROM questions WHERE id = ?';
+      const params: any[] = [id];
+      
+      if (userId) {
+        queryStr += ' AND created_by = ?';
+        params.push(userId);
+      }
+      
+      const results = await query<QuestionRow[]>(queryStr, params);
 
       if (results.length === 0) {
         return null;
@@ -177,7 +197,7 @@ export class QuestionService {
   /**
    * Tạo câu hỏi mới kèm đáp án
    */
-  async create(questionData: CreateQuestionDTO): Promise<QuestionWithAnswers> {
+  async create(questionData: CreateQuestionDTO, userId?: number | null): Promise<QuestionWithAnswers> {
     // Validate: Phải có ít nhất 2 đáp án
     if (!questionData.answers || questionData.answers.length < 2) {
       throw new Error('Câu hỏi phải có ít nhất 2 đáp án');
@@ -209,13 +229,14 @@ export class QuestionService {
 
       // Insert câu hỏi
       const questionResult = await query<{ insertId: number }>(
-        'INSERT INTO questions (content, image, difficulty, grade, subject_id) VALUES (?, ?, ?, ?, ?)',
+        'INSERT INTO questions (content, image, difficulty, grade, subject_id, created_by) VALUES (?, ?, ?, ?, ?, ?)',
         [
           questionData.content.trim(),
           questionData.image?.trim() || null,
           questionData.difficulty,
           questionData.grade || null,
           questionData.subjectId || null,
+          userId || null, // Lưu userId của người tạo
         ]
       );
 
@@ -252,13 +273,22 @@ export class QuestionService {
   }
 
   /**
-   * Cập nhật câu hỏi
+   * Cập nhật câu hỏi (chỉ người tạo mới được cập nhật)
    */
   async update(
     id: number,
-    questionData: UpdateQuestionDTO
+    questionData: UpdateQuestionDTO,
+    userId?: number | null
   ): Promise<QuestionWithAnswers | null> {
     try {
+      // Kiểm tra quyền sở hữu nếu có userId
+      if (userId) {
+        const existing = await this.findById(id, userId);
+        if (!existing) {
+          throw new Error('Không tìm thấy câu hỏi hoặc bạn không có quyền chỉnh sửa');
+        }
+      }
+      
       // Xây dựng query động dựa trên các field có giá trị
       const updates: string[] = [];
       const values: any[] = [];
@@ -293,17 +323,24 @@ export class QuestionService {
 
       if (updates.length === 0) {
         // Không có gì để cập nhật
-        return await this.findById(id);
+        return await this.findById(id, userId);
       }
 
       values.push(id);
+      
+      // Thêm điều kiện created_by nếu có userId
+      let whereClause = 'WHERE id = ?';
+      if (userId) {
+        whereClause += ' AND created_by = ?';
+        values.push(userId);
+      }
 
       await query(
-        `UPDATE questions SET ${updates.join(', ')} WHERE id = ?`,
+        `UPDATE questions SET ${updates.join(', ')} ${whereClause}`,
         values
       );
 
-      return await this.findById(id);
+      return await this.findById(id, userId);
     } catch (error) {
       console.error('Error updating question:', error);
       throw error;
@@ -311,14 +348,27 @@ export class QuestionService {
   }
 
   /**
-   * Xóa câu hỏi và tất cả đáp án liên quan (CASCADE sẽ tự động xóa answers)
+   * Xóa câu hỏi và tất cả đáp án liên quan (chỉ người tạo mới được xóa)
    */
-  async delete(id: number): Promise<boolean> {
+  async delete(id: number, userId?: number | null): Promise<boolean> {
     try {
-      const result = await query<{ affectedRows: number }>(
-        'DELETE FROM questions WHERE id = ?',
-        [id]
-      );
+      // Kiểm tra quyền sở hữu nếu có userId
+      if (userId) {
+        const existing = await this.findById(id, userId);
+        if (!existing) {
+          throw new Error('Không tìm thấy câu hỏi hoặc bạn không có quyền xóa');
+        }
+      }
+      
+      let queryStr = 'DELETE FROM questions WHERE id = ?';
+      const params: any[] = [id];
+      
+      if (userId) {
+        queryStr += ' AND created_by = ?';
+        params.push(userId);
+      }
+      
+      const result = await query<{ affectedRows: number }>(queryStr, params);
 
       return result.affectedRows > 0;
     } catch (error) {
@@ -426,6 +476,7 @@ export class QuestionService {
       difficulty: row.difficulty,
       grade: row.grade || null,
       subjectId: row.subject_id || null,
+      createdBy: row.created_by || null,
       createdAt: row.created_at,
     };
   }

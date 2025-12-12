@@ -42,6 +42,7 @@ import { QuestionWithAnswers } from '../types/question.types';
 import { Subject } from '../types/subject.types';
 import { getDifficultyName, getDifficultyColor } from '../utils/questionUtils';
 import { useToast } from '../contexts/ToastContext';
+import apiClient from '../utils/apiClient';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -101,7 +102,7 @@ const CreateExam: React.FC = () => {
   useEffect(() => {
     const fetchSubjects = async () => {
       try {
-        const response = await fetch(API_ENDPOINTS.SUBJECTS);
+        const response = await apiClient.get(API_ENDPOINTS.SUBJECTS);
         const data = await response.json();
         if (response.ok && data.success) {
           setSubjects(data.data || []);
@@ -138,7 +139,7 @@ const CreateExam: React.FC = () => {
         params.append('difficulty', filterDifficulty.toString());
       }
 
-      const response = await fetch(`${API_ENDPOINTS.QUESTIONS}?${params.toString()}`);
+      const response = await apiClient.get(`${API_ENDPOINTS.QUESTIONS}?${params.toString()}`);
       const data = await response.json();
       if (response.ok && data.success) {
         setAvailableQuestions(data.data || []);
@@ -235,11 +236,7 @@ const CreateExam: React.FC = () => {
         numberOfCodes: numberOfCodes > 0 ? numberOfCodes : undefined,
       };
 
-      const response = await fetch(API_ENDPOINTS.EXAMS, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(examData),
-      });
+      const response = await apiClient.post(API_ENDPOINTS.EXAMS, examData);
 
       const data = await response.json();
       if (!response.ok || !data.success) {
@@ -277,11 +274,7 @@ const CreateExam: React.FC = () => {
         subjectId: randomSubjectId === '' ? null : Number(randomSubjectId),
       };
 
-      const response = await fetch(`${API_ENDPOINTS.EXAMS}/random`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(examData),
-      });
+      const response = await apiClient.post(`${API_ENDPOINTS.EXAMS}/random`, examData);
 
       const data = await response.json();
       if (!response.ok || !data.success) {
