@@ -19,10 +19,12 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { ExamRoomWithExam } from '../types/examRoom.types';
 import { ExamResult } from '../types/examResult.types';
 import { API_ENDPOINTS } from '../constants/api';
+import { useToast } from '../contexts/ToastContext';
 import apiClient from '../utils/apiClient';
 
 const ExamRoom: React.FC = () => {
   const navigate = useNavigate();
+  const { showError } = useToast();
   const [examRoom, setExamRoom] = useState<ExamRoomWithExam | null>(null);
   const [loading, setLoading] = useState(true);
   const [checkingResult, setCheckingResult] = useState(true);
@@ -94,11 +96,11 @@ const ExamRoom: React.FC = () => {
         // Chuyển đến trang làm bài
         navigate('/exam-taking');
       } else {
-        alert(data.message || 'Không thể bắt đầu làm bài thi');
+        showError(data.message || 'Không thể bắt đầu làm bài thi');
       }
     } catch (error: any) {
       console.error('Error starting exam:', error);
-      alert(error.message || 'Không thể bắt đầu làm bài thi');
+      showError(error.message || 'Không thể bắt đầu làm bài thi');
     }
   };
 

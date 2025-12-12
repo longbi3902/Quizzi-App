@@ -24,10 +24,12 @@ import { API_ENDPOINTS } from '../constants/api';
 import { ExamWithQuestions } from '../types/exam.types';
 import { ExamRoomWithExam, UpdateExamRoomDTO } from '../types/examRoom.types';
 import apiClient from '../utils/apiClient';
+import { useToast } from '../contexts/ToastContext';
 
 const EditExamRoom: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const { showSuccess, showError } = useToast();
   const roomId = id ? Number.parseInt(id, 10) : null;
 
   const [roomName, setRoomName] = useState('');
@@ -129,10 +131,12 @@ const EditExamRoom: React.FC = () => {
         throw new Error(data.message || 'Cập nhật phòng thi thất bại');
       }
 
-      alert('Cập nhật phòng thi thành công!');
+      showSuccess('Cập nhật phòng thi thành công!');
       navigate('/teacher/exam-rooms');
     } catch (err: any) {
-      setError(err.message || 'Cập nhật phòng thi thất bại');
+      const errorMessage = err.message || 'Cập nhật phòng thi thất bại';
+      setError(errorMessage);
+      showError(errorMessage);
     } finally {
       setLoading(false);
     }

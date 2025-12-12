@@ -41,6 +41,7 @@ import { CreateExamDTO, CreateExamRandomDTO } from '../types/exam.types';
 import { QuestionWithAnswers } from '../types/question.types';
 import { Subject } from '../types/subject.types';
 import { getDifficultyName, getDifficultyColor } from '../utils/questionUtils';
+import { useToast } from '../contexts/ToastContext';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -59,6 +60,7 @@ function TabPanel(props: TabPanelProps) {
 
 const CreateExam: React.FC = () => {
   const navigate = useNavigate();
+  const { showSuccess, showError } = useToast();
   const [tabValue, setTabValue] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -244,10 +246,12 @@ const CreateExam: React.FC = () => {
         throw new Error(data.message || 'Tạo đề thi thất bại');
       }
 
-      alert('Tạo đề thi thành công!');
+      showSuccess('Tạo đề thi thành công!');
       navigate('/teacher/exams');
     } catch (err: any) {
-      setError(err.message || 'Tạo đề thi thất bại');
+      const errorMessage = err.message || 'Tạo đề thi thất bại';
+      setError(errorMessage);
+      showError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -284,10 +288,12 @@ const CreateExam: React.FC = () => {
         throw new Error(data.message || 'Tạo đề thi random thất bại');
       }
 
-      alert('Tạo đề thi random thành công!');
+      showSuccess('Tạo đề thi random thành công!');
       navigate('/teacher/exams');
     } catch (err: any) {
-      setError(err.message || 'Tạo đề thi random thất bại');
+      const errorMessage = err.message || 'Tạo đề thi random thất bại';
+      setError(errorMessage);
+      showError(errorMessage);
     } finally {
       setLoading(false);
     }

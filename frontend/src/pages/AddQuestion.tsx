@@ -33,6 +33,7 @@ import { API_ENDPOINTS } from '../constants/api';
 import { CreateQuestionDTO, CreateAnswerDTO, QuestionDifficulty } from '../types/question.types';
 import { Subject } from '../types/subject.types';
 import { difficultyOptions } from '../utils/questionUtils';
+import { useToast } from '../contexts/ToastContext';
 
 interface AnswerFormData {
   content: string;
@@ -41,6 +42,7 @@ interface AnswerFormData {
 
 const AddQuestion: React.FC = () => {
   const navigate = useNavigate();
+  const { showSuccess, showError } = useToast();
 
   // State quản lý dữ liệu form
   const [questionContent, setQuestionContent] = useState<string>('');
@@ -196,10 +198,12 @@ const AddQuestion: React.FC = () => {
       }
 
       // Thành công - chuyển về trang quản lý câu hỏi
-      alert('Tạo câu hỏi thành công!');
+      showSuccess('Tạo câu hỏi thành công!');
       navigate('/teacher/questions');
     } catch (err: any) {
-      setError(err.message || 'Tạo câu hỏi thất bại');
+      const errorMessage = err.message || 'Tạo câu hỏi thất bại';
+      setError(errorMessage);
+      showError(errorMessage);
     } finally {
       setLoading(false);
     }

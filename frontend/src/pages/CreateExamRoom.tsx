@@ -38,6 +38,7 @@ import { CreateExamRoomDTO } from '../types/examRoom.types';
 import { QuestionWithAnswers } from '../types/question.types';
 import { getDifficultyName, getDifficultyColor } from '../utils/questionUtils';
 import apiClient from '../utils/apiClient';
+import { useToast } from '../contexts/ToastContext';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -56,6 +57,7 @@ function TabPanel(props: TabPanelProps) {
 
 const CreateExamRoom: React.FC = () => {
   const navigate = useNavigate();
+  const { showSuccess, showError } = useToast();
   const [tabValue, setTabValue] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -165,10 +167,12 @@ const CreateExamRoom: React.FC = () => {
         throw new Error(data.message || 'Tạo phòng thi thất bại');
       }
 
-      alert('Tạo phòng thi thành công!');
+      showSuccess('Tạo phòng thi thành công!');
       navigate('/teacher/exam-rooms');
     } catch (err: any) {
-      setError(err.message || 'Tạo phòng thi thất bại');
+      const errorMessage = err.message || 'Tạo phòng thi thất bại';
+      setError(errorMessage);
+      showError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -326,10 +330,12 @@ const CreateExamRoom: React.FC = () => {
         throw new Error(roomResult.message || 'Tạo phòng thi thất bại');
       }
 
-      alert('Tạo phòng thi và đề thi thành công!');
+      showSuccess('Tạo phòng thi và đề thi thành công!');
       navigate('/teacher/exam-rooms');
     } catch (err: any) {
-      setError(err.message || 'Tạo phòng thi thất bại');
+      const errorMessage = err.message || 'Tạo phòng thi thất bại';
+      setError(errorMessage);
+      showError(errorMessage);
     } finally {
       setLoading(false);
     }

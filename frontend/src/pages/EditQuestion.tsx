@@ -30,6 +30,7 @@ import { API_ENDPOINTS } from '../constants/api';
 import { QuestionWithAnswers, CreateAnswerDTO, UpdateQuestionDTO, QuestionDifficulty } from '../types/question.types';
 import { Subject } from '../types/subject.types';
 import { difficultyOptions } from '../utils/questionUtils';
+import { useToast } from '../contexts/ToastContext';
 
 interface AnswerFormData {
   id?: number;
@@ -40,6 +41,7 @@ interface AnswerFormData {
 const EditQuestion: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const { showSuccess, showError } = useToast();
   const questionId = id ? Number.parseInt(id, 10) : null;
 
   const [questionContent, setQuestionContent] = useState<string>('');
@@ -250,10 +252,12 @@ const EditQuestion: React.FC = () => {
         // Nên ta sẽ bỏ qua phần này hoặc thông báo cho user
       }
 
-      alert('Cập nhật câu hỏi thành công!');
+      showSuccess('Cập nhật câu hỏi thành công!');
       navigate('/teacher/questions');
     } catch (err: any) {
-      setError(err.message || 'Cập nhật câu hỏi thất bại');
+      const errorMessage = err.message || 'Cập nhật câu hỏi thất bại';
+      setError(errorMessage);
+      showError(errorMessage);
     } finally {
       setLoading(false);
     }

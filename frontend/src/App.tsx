@@ -32,6 +32,7 @@ import ExamRoom from './pages/ExamRoom';
 import ExamTaking from './pages/ExamTaking';
 import ExamResult from './pages/ExamResult';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { ToastProvider } from './contexts/ToastContext';
 import TopHeader from './components/TopHeader';
 
 // Cấu hình theme (màu sắc, font, ...) cho Material-UI
@@ -249,10 +250,12 @@ function App() {
       {/* CssBaseline: Reset CSS và áp dụng base styles */}
       <CssBaseline />
       
-      {/* AuthProvider: Cung cấp AuthContext cho các component con */}
-      <AuthProvider>
-        {/* Router: Quản lý routing (điều hướng giữa các trang) */}
-        <Router>
+      {/* ToastProvider: Cung cấp Toast context cho toàn bộ app */}
+      <ToastProvider>
+        {/* AuthProvider: Cung cấp AuthContext cho các component con */}
+        <AuthProvider>
+          {/* Router: Quản lý routing (điều hướng giữa các trang) */}
+          <Router>
           <Box
             sx={{
               minHeight: '100vh',
@@ -474,7 +477,8 @@ function App() {
             </Box>
           </Box>
         </Router>
-      </AuthProvider>
+        </AuthProvider>
+      </ToastProvider>
     </ThemeProvider>
   );
 }

@@ -28,12 +28,14 @@ import AddIcon from '@mui/icons-material/Add';
 import { API_ENDPOINTS } from '../constants/api';
 import { ExamWithQuestions, UpdateExamWithQuestionsDTO } from '../types/exam.types';
 import { QuestionWithAnswers } from '../types/question.types';
+import { useToast } from '../contexts/ToastContext';
 import { getDifficultyName, getDifficultyColor } from '../utils/questionUtils';
 
 const EditExam: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const examId = id ? Number.parseInt(id, 10) : null;
+  const { showSuccess, showError } = useToast();
 
   const [examName, setExamName] = useState('');
   const [duration, setDuration] = useState<number>(60);
@@ -166,10 +168,12 @@ const EditExam: React.FC = () => {
         throw new Error(data.message || 'Cập nhật đề thi thất bại');
       }
 
-      alert('Cập nhật đề thi thành công!');
+      showSuccess('Cập nhật đề thi thành công!');
       navigate('/teacher/exams');
     } catch (err: any) {
-      setError(err.message || 'Cập nhật đề thi thất bại');
+      const errorMessage = err.message || 'Cập nhật đề thi thất bại';
+      setError(errorMessage);
+      showError(errorMessage);
     } finally {
       setLoading(false);
     }
