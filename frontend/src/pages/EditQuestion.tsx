@@ -25,7 +25,6 @@ import {
   Select,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { API_ENDPOINTS } from '../constants/api';
 import { QuestionWithAnswers, CreateAnswerDTO, UpdateQuestionDTO, QuestionDifficulty } from '../types/question.types';
 import { Subject } from '../types/subject.types';
@@ -254,7 +253,7 @@ const EditQuestion: React.FC = () => {
 
   if (loadingData) {
     return (
-      <Container maxWidth="md">
+      <Container maxWidth={false}>
         <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
           <CircularProgress />
         </Box>
@@ -263,11 +262,9 @@ const EditQuestion: React.FC = () => {
   }
 
   return (
-    <Container component="main" maxWidth="md">
+    <Container component="main" maxWidth={false}>
       <Box
         sx={{
-          marginTop: 4,
-          marginBottom: 4,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -275,9 +272,6 @@ const EditQuestion: React.FC = () => {
       >
         <Paper elevation={3} sx={{ padding: 4, width: '100%', borderRadius: '12px' }}>
           <Box display="flex" alignItems="center" gap={2} mb={3}>
-            <IconButton onClick={() => navigate('/teacher/questions')}>
-              <ArrowBackIcon />
-            </IconButton>
             <Typography component="h1" variant="h4" sx={{ color: '#6366f1', fontWeight: 'bold' }}>
               CHỈNH SỬA CÂU HỎI
             </Typography>

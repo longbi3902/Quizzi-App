@@ -16,16 +16,14 @@ import {
   Checkbox,
   FormGroup,
   FormControl,
-  FormLabel,
   CircularProgress,
   Dialog,
   DialogContent,
   DialogTitle,
   Alert,
-  Divider,
   Chip,
 } from '@mui/material';
-import { StartExamResponse, ExamQuestionForTaking, StudentAnswer, SubmitExamDTO } from '../types/examResult.types';
+import { StartExamResponse, StudentAnswer, SubmitExamDTO } from '../types/examResult.types';
 import { API_ENDPOINTS } from '../constants/api';
 import apiClient from '../utils/apiClient';
 
@@ -71,7 +69,8 @@ const ExamTaking: React.FC = () => {
           }));
 
           const submitData: SubmitExamDTO = {
-            examRoomId: examData.examRoomId,
+            classId: examData.classId,
+            examId: examData.examId,
             examCodeId: examData.examCodeId,
             answers: answersArray,
           };
@@ -139,7 +138,8 @@ const ExamTaking: React.FC = () => {
     }));
 
     const submitData: SubmitExamDTO = {
-      examRoomId: examData.examRoomId,
+      classId: examData.classId,
+      examId: examData.examId,
       examCodeId: examData.examCodeId,
       answers: answersArray,
     };
@@ -170,7 +170,7 @@ const ExamTaking: React.FC = () => {
     setShowResultDialog(false);
     if (result && !result.error) {
       // Chuyển đến trang xem kết quả
-      navigate('/exam-result', { state: { examRoomId: examData?.examRoomId } });
+      navigate('/exam-result', { state: { classId: examData?.classId, examId: examData?.examId } });
     }
   };
 

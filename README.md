@@ -51,6 +51,8 @@
 - ✅ Tự động refresh token khi hết hạn
 - ✅ Giữ đăng nhập khi reload trang
 - ✅ Protected routes theo role
+- ✅ Cập nhật thông tin cá nhân (Teacher & Student)
+- ✅ Validation số điện thoại (định dạng Việt Nam: 10 số, bắt đầu bằng 03, 05, 07, 08, hoặc 09)
 
 ### 2. Quản Lý Câu Hỏi (Teacher)
 - ✅ **CRUD câu hỏi**: Tạo, xem, sửa, xóa
@@ -61,7 +63,7 @@
   - Môn học: Toán, Lý, Văn, Sử, Địa, Hóa, Tin, Anh, Sinh
 - ✅ Upload ảnh cho câu hỏi (không bắt buộc)
 - ✅ Phân trang danh sách câu hỏi
-- ✅ Bộ lọc theo tên, môn, khối, độ khó
+- ✅ Tìm kiếm và lọc theo nội dung câu hỏi, môn học, khối lớp (1-12), độ khó (Nhận biết, Thông hiểu, Vận dụng, Vận dụng cao)
 
 ### 3. Quản Lý Đề Thi (Teacher)
 - ✅ **Tạo đề thi tự chọn**: Chọn từng câu hỏi và gán điểm
@@ -72,22 +74,28 @@
 - ✅ **Quản lý đề thi**: Xem, sửa, xóa
 - ✅ **Mã đề thi**: Tạo nhiều mã đề cho một đề thi (đảo thứ tự câu hỏi)
 - ✅ Phân trang danh sách đề thi
+- ✅ Tìm kiếm theo tên đề thi
 
-### 4. Quản Lý Phòng Thi (Teacher)
-- ✅ **CRUD phòng thi**: Tạo, xem, sửa, xóa
-- ✅ **Thông tin phòng thi**:
-  - Tên phòng thi
-  - Mật khẩu phòng thi
-  - Mã phòng thi (tự động sinh, 6 ký tự ngẫu nhiên)
-  - Đề thi được sử dụng
-  - Thời gian bắt đầu và kết thúc
-- ✅ **Tạo phòng thi**: Có thể chọn đề thi có sẵn hoặc tạo đề thi mới ngay trong form
-- ✅ Phân trang danh sách phòng thi
+### 4. Quản Lý Lớp Học (Teacher)
+- ✅ **CRUD lớp học**: Tạo, xem, sửa, xóa
+- ✅ **Thông tin lớp học**:
+  - Tên lớp học
+  - Mật khẩu lớp học
+  - Mã lớp học (tự động sinh, 6 ký tự ngẫu nhiên)
+  - Nhiều đề thi có thể được thêm vào lớp học
+  - **Thời gian bắt đầu và kết thúc**: Gắn với từng đề thi riêng biệt (trong bảng `class_exams`)
+- ✅ **Quản lý đề thi trong lớp**:
+  - Thêm đề thi có sẵn vào lớp
+  - Tạo đề thi mới trực tiếp trong trang chi tiết lớp (tự chọn câu hỏi hoặc random)
+  - Gán thời gian bắt đầu/kết thúc cho từng đề thi
+  - Xóa đề thi khỏi lớp
+- ✅ Phân trang danh sách lớp học
+- ✅ Tìm kiếm theo tên lớp hoặc mã lớp
 
 ### 5. Tham Gia Thi (Student)
-- ✅ **Tham gia phòng thi**: Nhập mã phòng thi và mật khẩu
-- ✅ **Xem danh sách phòng thi đã tham gia**: Hiển thị trên trang chủ
-- ✅ **Kiểm tra thời gian thi**:
+- ✅ **Tham gia lớp học**: Nhập mã lớp học và mật khẩu
+- ✅ **Xem danh sách lớp học đã tham gia**: Hiển thị trên trang chủ
+- ✅ **Kiểm tra thời gian thi** (theo từng đề thi):
   - Chưa đến thời gian bắt đầu: Hiển thị "Chưa đến thời gian bắt đầu thi"
   - Đã hết thời gian: Hiển thị "Đã hết thời gian thi"
   - Trong thời gian thi: Hiển thị nút "Bắt đầu thi"
@@ -98,13 +106,14 @@
   - Timer đếm ngược thời gian
   - Tự động nộp bài khi hết giờ
 - ✅ **Chấm điểm tự động**: Sau khi nộp bài, hệ thống tự động chấm và hiển thị kết quả
+- ✅ **Chọn đề thi**: Học sinh chọn đề thi từ danh sách đề thi trong lớp
 - ✅ **Xem kết quả**:
   - Nếu chưa hết thời gian thi: Chỉ xem đáp án đã chọn
   - Nếu đã hết thời gian thi: Xem đáp án đã chọn và đáp án đúng
-- ✅ **Không cho phép thi lại**: Mỗi học sinh chỉ được thi một lần cho mỗi phòng thi
+- ✅ **Không cho phép thi lại**: Mỗi học sinh chỉ được thi một lần cho mỗi đề thi trong lớp
 
 ### 6. Lịch Sử Thi (Teacher)
-- ✅ **Xem lịch sử thi của học sinh** theo phòng thi
+- ✅ **Xem lịch sử thi của học sinh** theo lớp học và đề thi
 - ✅ **Thông tin hiển thị**:
   - Tên học sinh
   - Email
@@ -125,8 +134,8 @@
 - ✅ Phân trang danh sách kết quả
 
 ### 7. Lịch Sử Thi (Student)
-- ✅ Xem danh sách các phòng thi đã tham gia
-- ✅ Xem kết quả thi của từng phòng thi
+- ✅ Xem danh sách các lớp học đã tham gia
+- ✅ Xem kết quả thi của từng đề thi trong lớp
 - ✅ Xem chi tiết bài làm đã nộp
 
 ---
@@ -164,53 +173,49 @@ Hệ thống đảm bảo mỗi người dùng chỉ có thể xem và thao tác
 - **Khi tạo đề thi random**: Chỉ lấy câu hỏi của chính giáo viên đó (filter `created_by`)
 - **Kết quả**: Giáo viên A chỉ thấy đề thi của giáo viên A
 
-#### 3. Phòng Thi (Exam Rooms)
-- **Trường `created_by`**: Lưu ID giáo viên tạo phòng thi
+#### 3. Lớp Học (Classes)
+- **Trường `created_by`**: Lưu ID giáo viên tạo lớp học
 - **Filter trong queries**:
   ```sql
-  SELECT * FROM exam_rooms WHERE created_by = ? [AND filters...]
+  SELECT * FROM classes WHERE created_by = ? [AND filters...]
   ```
 - **Khi tạo mới**: Tự động lưu `created_by = userId`
-- **Khi chọn đề thi**: Chỉ hiển thị đề thi của chính giáo viên đó
+- **Khi thêm đề thi**: Chỉ hiển thị đề thi của chính giáo viên đó
 - **Khi sửa/xóa**: Kiểm tra `created_by = userId` trước khi cho phép
-- **Kết quả**: Giáo viên A chỉ thấy phòng thi của giáo viên A
+- **Kết quả**: Giáo viên A chỉ thấy lớp học của giáo viên A
 
 ### Cơ Chế Cá Nhân Hóa Cho Học Sinh
 
-#### 1. Phòng Thi Đã Tham Gia
-- **Bảng `exam_room_participants`**: Lưu lịch sử tham gia phòng thi
+#### 1. Lớp Học Đã Tham Gia
+- **Bảng `class_participants`**: Lưu lịch sử tham gia lớp học
 - **Filter theo `user_id`**:
   ```sql
-  SELECT er.* FROM exam_room_participants erp
-  INNER JOIN exam_rooms er ON erp.exam_room_id = er.id
-  WHERE erp.user_id = ?
+  SELECT c.* FROM class_participants cp
+  INNER JOIN classes c ON cp.class_id = c.id
+  WHERE cp.user_id = ?
   ```
-- **Khi tham gia phòng thi**: Tự động insert vào `exam_room_participants`
-- **Kết quả**: Học sinh chỉ thấy phòng thi mà mình đã tham gia
+- **Khi tham gia lớp học**: Tự động insert vào `class_participants`
+- **Kết quả**: Học sinh chỉ thấy lớp học mà mình đã tham gia
 
 #### 2. Kết Quả Thi
 - **Bảng `exam_results`**: Lưu kết quả thi của học sinh
 - **Filter theo `user_id`**:
   ```sql
-  SELECT * FROM exam_results WHERE user_id = ? AND exam_room_id = ?
+  SELECT * FROM exam_results WHERE user_id = ? AND class_id = ? AND exam_id = ?
   ```
 - **Khi làm bài**: Tự động lưu `user_id` từ JWT token
 - **Khi xem kết quả**: Chỉ lấy kết quả của chính học sinh đó
 - **Kết quả**: Học sinh chỉ thấy kết quả thi của mình
 
-#### 3. Xem Phòng Thi và Đề Thi
-- **Logic đặc biệt**: Khi học sinh xem phòng thi đã tham gia, hệ thống **không filter theo `created_by`**
-- **Lý do**: Học sinh cần xem phòng thi và đề thi của giáo viên khác (nếu đã tham gia)
+#### 3. Xem Lớp Học và Đề Thi
+- **Logic đặc biệt**: Khi học sinh xem lớp học đã tham gia, hệ thống **không filter theo `created_by`**
+- **Lý do**: Học sinh cần xem lớp học và đề thi của giáo viên khác (nếu đã tham gia)
 - **Implementation**:
   ```typescript
-  // Trong ExamRoomService.findById()
-  if (userId !== undefined && userId !== null) {
-    // Filter theo created_by (cho giáo viên)
-    queryStr += ' AND created_by = ?';
-  }
-  // Nếu userId = undefined/null (cho học sinh), không filter
+  // Trong ClassService.findByIdForStudent()
+  // Không filter theo created_by cho học sinh
   ```
-- **Kết quả**: Học sinh có thể xem phòng thi và đề thi mà mình đã tham gia, bất kể ai tạo
+- **Kết quả**: Học sinh có thể xem lớp học và đề thi mà mình đã tham gia, bất kể ai tạo
 
 ### Luồng Xử Lý Request
 
@@ -249,24 +254,24 @@ Hệ thống đảm bảo mỗi người dùng chỉ có thể xem và thao tác
 3. Kết quả: Chỉ thấy câu hỏi của giáo viên B (không thấy của giáo viên A)
 ```
 
-#### Ví dụ 3: Học sinh tham gia phòng thi của giáo viên A
+#### Ví dụ 3: Học sinh tham gia lớp học của giáo viên A
 ```
 1. Học sinh đăng nhập → userId = 10
-2. Nhập mã phòng thi → Verify thành công
-3. Insert vào exam_room_participants → (user_id=10, exam_room_id=X)
-4. Khi xem danh sách phòng thi đã tham gia:
-   SELECT er.* FROM exam_room_participants erp
-   INNER JOIN exam_rooms er ON erp.exam_room_id = er.id
-   WHERE erp.user_id = 10
-5. Kết quả: Chỉ thấy phòng thi mà học sinh đã tham gia
+2. Nhập mã lớp học → Verify thành công
+3. Insert vào class_participants → (user_id=10, class_id=X)
+4. Khi xem danh sách lớp học đã tham gia:
+   SELECT c.* FROM class_participants cp
+   INNER JOIN classes c ON cp.class_id = c.id
+   WHERE cp.user_id = 10
+5. Kết quả: Chỉ thấy lớp học mà học sinh đã tham gia
 ```
 
-#### Ví dụ 4: Học sinh xem phòng thi đã tham gia (không filter created_by)
+#### Ví dụ 4: Học sinh xem lớp học đã tham gia (không filter created_by)
 ```
-1. Học sinh xem phòng thi ID = 5 (của giáo viên A)
-2. Service.findById(5, undefined) → Không filter theo created_by
-3. Query: SELECT * FROM exam_rooms WHERE id = 5
-4. Kết quả: Học sinh có thể xem phòng thi của giáo viên A (vì đã tham gia)
+1. Học sinh xem lớp học ID = 5 (của giáo viên A)
+2. ClassService.findByIdForStudent(5) → Không filter theo created_by
+3. Query: SELECT * FROM classes WHERE id = 5
+4. Kết quả: Học sinh có thể xem lớp học của giáo viên A (vì đã tham gia)
 ```
 
 ### Bảo Mật
@@ -329,25 +334,28 @@ Hệ thống đảm bảo mỗi người dùng chỉ có thể xem và thao tác
    - Lưu đề thi
 ```
 
-#### 3. Tạo Phòng Thi
+#### 3. Tạo Lớp Học
 ```
-1. Vào "Quản lý phòng thi" > "Tạo phòng thi mới"
+1. Vào "Quản lý lớp học" > "Tạo lớp học mới"
 2. Nhập thông tin:
-   - Tên phòng thi
-   - Mật khẩu phòng thi
-   - Thời gian bắt đầu
-   - Thời gian kết thúc
-3. Chọn đề thi:
-   - Chọn từ danh sách đề thi có sẵn, HOẶC
-   - Nhấn "Tạo đề thi mới" để tạo đề thi ngay trong form
-4. Hệ thống tự động sinh mã phòng thi (6 ký tự)
-5. Lưu phòng thi
+   - Tên lớp học
+   - Mật khẩu lớp học
+3. Hệ thống tự động sinh mã lớp học (6 ký tự)
+4. Lưu lớp học
+5. Vào trang chi tiết lớp học để:
+   - Xem/sửa thông tin lớp học
+   - Xem danh sách học sinh đã tham gia
+   - Quản lý đề thi:
+     * Thêm đề thi có sẵn vào lớp
+     * Tạo đề thi mới trực tiếp (tự chọn câu hỏi hoặc random)
+     * Gán thời gian bắt đầu/kết thúc cho từng đề thi
+     * Xóa đề thi khỏi lớp
 ```
 
 #### 4. Xem Lịch Sử Thi
 ```
-1. Vào "Quản lý phòng thi"
-2. Nhấn nút "Xem lịch sử thi" (icon History) của phòng thi
+1. Vào "Quản lý lớp học"
+2. Nhấn nút "Xem lịch sử thi" (icon History) của lớp học và đề thi
 3. Xem danh sách học sinh đã thi:
    - Lọc theo tên học sinh
    - Sắp xếp theo điểm/thời gian làm bài/thời gian bắt đầu
@@ -360,35 +368,36 @@ Hệ thống đảm bảo mỗi người dùng chỉ có thể xem và thao tác
 
 ### Luồng Nghiệp Vụ - Học Sinh
 
-#### 1. Tham Gia Phòng Thi
+#### 1. Tham Gia Lớp Học
 ```
 1. Đăng nhập với role Student
-2. Trên trang chủ, nhấn "Tham gia phòng thi"
+2. Trên trang chủ, nhấn "Tham gia lớp học"
 3. Nhập:
-   - Mã phòng thi (6 ký tự)
-   - Mật khẩu phòng thi
+   - Mã lớp học (6 ký tự)
+   - Mật khẩu lớp học
 4. Hệ thống kiểm tra và lưu thông tin tham gia
-5. Chuyển đến trang phòng thi
+5. Chuyển đến trang lớp học
 ```
 
 #### 2. Làm Bài Thi
 ```
-1. Vào trang phòng thi (từ danh sách đã tham gia hoặc sau khi nhập mã)
-2. Hệ thống kiểm tra thời gian:
+1. Vào trang lớp học (từ danh sách đã tham gia hoặc sau khi nhập mã)
+2. Chọn đề thi từ danh sách đề thi trong lớp (mỗi đề thi có thời gian bắt đầu/kết thúc riêng)
+3. Hệ thống kiểm tra thời gian theo đề thi đã chọn:
    - Nếu chưa đến thời gian: Hiển thị "Chưa đến thời gian bắt đầu thi"
    - Nếu đã hết thời gian: Hiển thị "Đã hết thời gian thi"
    - Nếu trong thời gian thi: Hiển thị nút "Bắt đầu thi"
-3. Nhấn "Bắt đầu thi":
+4. Nhấn "Bắt đầu thi":
    - Hệ thống gán mã đề ngẫu nhiên (nếu có nhiều mã đề)
    - Hiển thị tất cả câu hỏi trên một trang
    - Bắt đầu đếm ngược thời gian
-4. Làm bài:
+5. Làm bài:
    - Chọn đáp án cho từng câu hỏi
    - Có thể thay đổi đáp án bất cứ lúc nào
-5. Nộp bài:
+6. Nộp bài:
    - Nhấn nút "Nộp bài" để nộp sớm, HOẶC
    - Hệ thống tự động nộp khi hết giờ
-6. Sau khi nộp:
+7. Sau khi nộp:
    - Hiển thị popup "Đang chấm bài..."
    - Hệ thống tự động chấm điểm
    - Hiển thị kết quả:
@@ -400,8 +409,8 @@ Hệ thống đảm bảo mỗi người dùng chỉ có thể xem và thao tác
 
 #### 3. Xem Kết Quả
 ```
-1. Trên trang chủ, xem danh sách phòng thi đã tham gia
-2. Nhấn vào phòng thi đã thi xong
+1. Trên trang chủ, xem danh sách lớp học đã tham gia
+2. Nhấn vào lớp học và chọn đề thi đã thi xong
 3. Xem kết quả:
    - Điểm số
    - Thời gian làm bài
@@ -473,29 +482,35 @@ Hệ thống đảm bảo mỗi người dùng chỉ có thể xem và thao tác
 - `question_order`: Thứ tự câu hỏi đã đảo (JSON array)
 - `created_at`: Thời gian tạo
 
-#### 8. `exam_rooms` - Phòng thi
-- `id`: ID phòng thi
-- `code`: Mã phòng thi (6 ký tự, unique, tự động sinh)
-- `name`: Tên phòng thi
-- `password`: Mật khẩu phòng thi
-- `exam_id`: ID đề thi (FK → exams)
-- `start_date`: Thời gian bắt đầu
-- `end_date`: Thời gian kết thúc
+#### 8. `classes` - Lớp học
+- `id`: ID lớp học
+- `code`: Mã lớp học (6 ký tự, unique, tự động sinh)
+- `name`: Tên lớp học
+- `password`: Mật khẩu lớp học
 - `created_by`: ID giáo viên tạo (nullable, FK → users) - **Dùng cho cá nhân hóa**
 - `created_at`: Thời gian tạo
 - `updated_at`: Thời gian cập nhật
 
-#### 9. `exam_room_participants` - Người tham gia phòng thi
+#### 9. `class_exams` - Đề thi trong lớp học
+- `id`: ID
+- `class_id`: ID lớp học (FK → classes)
+- `exam_id`: ID đề thi (FK → exams)
+- `start_date`: Thời gian bắt đầu cho phép thi (theo đề thi này)
+- `end_date`: Thời gian kết thúc cho phép thi (theo đề thi này)
+- `created_at`: Thời gian tạo
+- Unique constraint: (class_id, exam_id)
+
+#### 10. `class_participants` - Người tham gia lớp học
 - `id`: ID
 - `user_id`: ID học sinh (FK → users)
-- `exam_room_id`: ID phòng thi (FK → exam_rooms)
+- `class_id`: ID lớp học (FK → classes)
 - `joined_at`: Thời gian tham gia
-- Unique constraint: (user_id, exam_room_id)
+- Unique constraint: (user_id, class_id)
 
-#### 10. `exam_results` - Kết quả thi
+#### 11. `exam_results` - Kết quả thi
 - `id`: ID kết quả
 - `user_id`: ID học sinh (FK → users)
-- `exam_room_id`: ID phòng thi (FK → exam_rooms)
+- `class_id`: ID lớp học (FK → classes)
 - `exam_code_id`: ID mã đề (FK → exam_codes, nullable)
 - `exam_id`: ID đề thi gốc (FK → exams)
 - `started_at`: Thời gian bắt đầu làm bài
@@ -508,14 +523,14 @@ Hệ thống đảm bảo mỗi người dùng chỉ có thể xem và thao tác
 - `updated_at`: Thời gian cập nhật
 - Unique constraint: (user_id, exam_room_id)
 
-#### 11. `refresh_tokens` - Refresh tokens
+#### 12. `refresh_tokens` - Refresh tokens
 - `id`: ID
 - `user_id`: ID người dùng (FK → users)
 - `token`: Refresh token
 - `expires_at`: Thời gian hết hạn
 - `created_at`: Thời gian tạo
 
-#### 12. `migrations` - Quản lý migrations
+#### 13. `migrations` - Quản lý migrations
 - `id`: ID
 - `filename`: Tên file migration
 - `executed_at`: Thời gian chạy
@@ -523,7 +538,7 @@ Hệ thống đảm bảo mỗi người dùng chỉ có thể xem và thao tác
 ### Quan Hệ Giữa Các Bảng
 
 ```
-users (1) ──< exam_room_participants (N)
+users (1) ──< class_participants (N)
 users (1) ──< exam_results (N)
 users (1) ──< refresh_tokens (N)
 
@@ -533,11 +548,12 @@ questions (1) ──< exam_questions (N)
 
 exams (1) ──< exam_questions (N)
 exams (1) ──< exam_codes (N)
-exams (1) ──< exam_rooms (N)
+exams (1) ──< class_exams (N)
 exams (1) ──< exam_results (N)
 
-exam_rooms (1) ──< exam_room_participants (N)
-exam_rooms (1) ──< exam_results (N)
+classes (1) ──< class_exams (N)
+classes (1) ──< class_participants (N)
+classes (1) ──< exam_results (N)
 
 exam_codes (1) ──< exam_results (N)
 ```
@@ -551,9 +567,10 @@ exam_codes (1) ──< exam_results (N)
 - `POST /api/auth/login` - Đăng nhập
 - `POST /api/auth/refresh` - Refresh token
 - `POST /api/auth/logout` - Đăng xuất
+- `PUT /api/auth/profile` - Cập nhật thông tin cá nhân (Teacher & Student)
 
 ### Questions (Teacher only)
-- `GET /api/questions?page=1&limit=10&name=...&subjectId=...&grade=...&difficulty=...` - Lấy danh sách câu hỏi (có filter và pagination)
+- `GET /api/questions?page=1&limit=10&content=...&subjectId=...&grade=...&difficulty=...` - Lấy danh sách câu hỏi (có filter và pagination)
 - `GET /api/questions/:id` - Lấy chi tiết câu hỏi
 - `POST /api/questions` - Tạo câu hỏi
 - `PUT /api/questions/:id` - Cập nhật câu hỏi
@@ -564,7 +581,7 @@ exam_codes (1) ──< exam_results (N)
 - `GET /api/subjects/:id` - Lấy chi tiết môn học
 
 ### Exams (Teacher only)
-- `GET /api/exams?page=1&limit=10` - Lấy danh sách đề thi (có pagination)
+- `GET /api/exams?page=1&limit=10&name=...` - Lấy danh sách đề thi (có tìm kiếm theo tên và pagination)
 - `GET /api/exams/:id` - Lấy chi tiết đề thi
 - `POST /api/exams` - Tạo đề thi (tự chọn câu hỏi)
 - `POST /api/exams/random` - Tạo đề thi random
@@ -575,21 +592,25 @@ exam_codes (1) ──< exam_results (N)
 - `GET /api/exam-codes?examId=...` - Lấy danh sách mã đề theo đề thi
 - `GET /api/exam-codes/:id` - Lấy chi tiết mã đề
 
-### Exam Rooms (Teacher only)
-- `GET /api/exam-rooms?page=1&limit=10` - Lấy danh sách phòng thi (có pagination)
-- `GET /api/exam-rooms/:id` - Lấy chi tiết phòng thi
-- `POST /api/exam-rooms` - Tạo phòng thi
-- `PUT /api/exam-rooms/:id` - Cập nhật phòng thi
-- `DELETE /api/exam-rooms/:id` - Xóa phòng thi
-- `POST /api/exam-rooms/verify` - Xác thực mã phòng thi và mật khẩu (Student)
-- `GET /api/exam-rooms/participated` - Lấy danh sách phòng thi đã tham gia (Student)
+### Classes (Teacher only)
+- `GET /api/classes?page=1&limit=10&search=...` - Lấy danh sách lớp học (có tìm kiếm theo tên/mã lớp và pagination)
+- `GET /api/classes/:id` - Lấy chi tiết lớp học
+- `POST /api/classes` - Tạo lớp học
+- `PUT /api/classes/:id` - Cập nhật lớp học
+- `DELETE /api/classes/:id` - Xóa lớp học
+- `GET /api/classes/:id/participants` - Lấy danh sách học sinh trong lớp
+- `POST /api/classes/:id/exams` - Thêm đề thi vào lớp
+- `DELETE /api/classes/:id/exams/:examId` - Xóa đề thi khỏi lớp
+- `PUT /api/classes/:id/exams/:examId/dates` - Cập nhật thời gian bắt đầu/kết thúc cho đề thi trong lớp
+- `POST /api/classes/verify` - Xác thực mã lớp học và mật khẩu (Student)
+- `GET /api/classes/participated` - Lấy danh sách lớp học đã tham gia (Student)
 
 ### Exam Results
-- `POST /api/exam-results/start/:examRoomId` - Bắt đầu làm bài (Student)
+- `POST /api/exam-results/start/class/:classId/exam/:examId` - Bắt đầu làm bài (Student)
 - `POST /api/exam-results/submit` - Nộp bài (Student)
-- `GET /api/exam-results/room/:examRoomId` - Lấy kết quả của học sinh trong phòng thi (Student)
+- `GET /api/exam-results/class/:classId/exam/:examId` - Lấy kết quả của học sinh trong lớp và đề thi (Student)
 - `GET /api/exam-results/history` - Lấy lịch sử thi của học sinh (Student)
-- `GET /api/exam-results/room/:examRoomId/all?studentName=...&scoreSort=...&durationSort=...&page=1&limit=10` - Lấy tất cả kết quả trong phòng thi (Teacher, có filter và pagination)
+- `GET /api/exam-results/class/:classId/exam/:examId/all?studentName=...&scoreSort=...&durationSort=...&page=1&limit=10` - Lấy tất cả kết quả trong lớp và đề thi (Teacher, có filter và pagination)
 - `GET /api/exam-results/detail/:resultId` - Lấy chi tiết bài làm (Teacher)
 
 ---
@@ -758,6 +779,7 @@ Sau khi chạy migrations, có sẵn các tài khoản mẫu:
 - SQL injection prevention (prepared statements)
 - CORS configuration
 - Input validation
+- Phone number validation (Vietnamese format)
 
 ---
 
@@ -765,9 +787,13 @@ Sau khi chạy migrations, có sẵn các tài khoản mẫu:
 
 - Tất cả thời gian được lưu dưới dạng UTC trong database
 - Frontend hiển thị thời gian theo timezone local
-- Mã phòng thi được sinh ngẫu nhiên 6 ký tự (0-9, A-Z) với xác suất trùng thấp
-- Mỗi học sinh chỉ được thi một lần cho mỗi phòng thi
+- Mã lớp học được sinh ngẫu nhiên 6 ký tự (0-9, A-Z) với xác suất trùng thấp
+- Mỗi học sinh chỉ được thi một lần cho mỗi đề thi trong lớp
 - Đáp án đúng chỉ hiển thị sau khi hết thời gian thi
+- Một lớp học có thể chứa nhiều đề thi
+- **Thời gian bắt đầu/kết thúc** được gắn với từng đề thi riêng biệt trong lớp (bảng `class_exams`), không phải với lớp học
+- Giáo viên có thể tạo đề thi mới trực tiếp trong trang chi tiết lớp học
+- Số điện thoại phải đúng định dạng Việt Nam (10 số, bắt đầu bằng 03, 05, 07, 08, hoặc 09)
 
 ---
 

@@ -21,3 +21,5 @@ INSERT INTO subjects (name) VALUES
 ('Sinh học')
 ON DUPLICATE KEY UPDATE name=name;
 
+
+

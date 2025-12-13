@@ -102,6 +102,60 @@ export class UserService {
   }
 
   /**
+   * Cập nhật thông tin user
+   */
+  async update(id: number, updateData: {
+    name?: string;
+    birthYear?: number | null;
+    className?: string | null;
+    school?: string;
+    phone?: string | null;
+  }): Promise<User | null> {
+    try {
+      // Xây dựng câu lệnh UPDATE động
+      const updates: string[] = [];
+      const values: any[] = [];
+
+      if (updateData.name !== undefined) {
+        updates.push('name = ?');
+        values.push(updateData.name);
+      }
+      if (updateData.birthYear !== undefined) {
+        updates.push('birth_year = ?');
+        values.push(updateData.birthYear);
+      }
+      if (updateData.className !== undefined) {
+        updates.push('class_name = ?');
+        values.push(updateData.className);
+      }
+      if (updateData.school !== undefined) {
+        updates.push('school = ?');
+        values.push(updateData.school);
+      }
+      if (updateData.phone !== undefined) {
+        updates.push('phone = ?');
+        values.push(updateData.phone);
+      }
+
+      if (updates.length === 0) {
+        // Không có gì để cập nhật
+        return await this.findById(id);
+      }
+
+      values.push(id);
+      const updateQuery = `UPDATE users SET ${updates.join(', ')} WHERE id = ?`;
+      
+      await query(updateQuery, values);
+
+      // Lấy user đã cập nhật
+      return await this.findById(id);
+    } catch (error) {
+      console.error('Error updating user:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Xác thực mật khẩu
    */
   async verifyPassword(plainPassword: string, hashedPassword: string): Promise<boolean> {

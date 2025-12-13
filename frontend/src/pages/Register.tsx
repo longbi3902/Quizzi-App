@@ -23,7 +23,7 @@ import {
   Grid,
 } from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
-import { isValidPassword, doPasswordsMatch } from '../utils/validation';
+import { isValidPassword, doPasswordsMatch, isValidPhoneNumber } from '../utils/validation';
 
 // Định nghĩa kiểu dữ liệu cho form đăng ký
 interface RegisterFormData {
@@ -92,6 +92,14 @@ const Register: React.FC = () => {
     if (!doPasswordsMatch(formData.password, formData.confirmPassword)) {
       setError('Mật khẩu xác nhận không khớp');
       return false;
+    }
+
+    // Kiểm tra số điện thoại nếu có
+    if (formData.phone && formData.phone.trim()) {
+      if (!isValidPhoneNumber(formData.phone.trim())) {
+        setError('Số điện thoại không hợp lệ. Vui lòng nhập số điện thoại Việt Nam (10 số, bắt đầu bằng 03, 05, 07, 08, hoặc 09)');
+        return false;
+      }
     }
 
     return true;

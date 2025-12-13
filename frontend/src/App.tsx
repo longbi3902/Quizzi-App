@@ -23,17 +23,23 @@ import CreateExam from './pages/CreateExam';
 import EditExam from './pages/EditExam';
 import ExamCodeList from './pages/ExamCodeList';
 import ExamCodeDetail from './pages/ExamCodeDetail';
-import ExamRoomManagement from './pages/ExamRoomManagement';
-import CreateExamRoom from './pages/CreateExamRoom';
-import EditExamRoom from './pages/EditExamRoom';
 import ExamRoomHistory from './pages/ExamRoomHistory';
+import ClassManagement from './pages/ClassManagement';
+import CreateClass from './pages/CreateClass';
+import EditClass from './pages/EditClass';
+import ClassDetail from './pages/ClassDetail';
+import ClassRoom from './pages/ClassRoom';
 import JoinExamRoom from './pages/JoinExamRoom';
-import ExamRoom from './pages/ExamRoom';
+import TeacherProfile from './pages/TeacherProfile';
+import StudentProfile from './pages/StudentProfile';
 import ExamTaking from './pages/ExamTaking';
 import ExamResult from './pages/ExamResult';
+import ExamResultDetail from './pages/ExamResultDetail';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ToastProvider } from './contexts/ToastContext';
 import TopHeader from './components/TopHeader';
+import TeacherLayout from './components/TeacherLayout';
+import Footer from './components/Footer';
 
 // Cấu hình theme (màu sắc, font, ...) cho Material-UI
 const theme = createTheme({
@@ -256,227 +262,160 @@ function App() {
         <AuthProvider>
           {/* Router: Quản lý routing (điều hướng giữa các trang) */}
           <Router>
-          <Box
-            sx={{
-              minHeight: '100vh',
-              backgroundColor: 'background.default',
-              display: 'flex',
-              flexDirection: 'column',
-            }}
-          >
-            <TopHeader />
+            <Routes>
+              {/* Routes không dùng TeacherLayout (login, register, home, student routes) */}
+              <Route
+                path="/*"
+                element={
+                  <Box
+                    sx={{
+                      minHeight: '100vh',
+                      backgroundColor: 'background.default',
+                      display: 'flex',
+                      flexDirection: 'column',
+                    }}
+                  >
+                    <TopHeader />
+                    <Box
+                      sx={{
+                        flex: 1,
+                        display: 'flex',
+                        justifyContent: 'center',
+                        px: { xs: 2, sm: 3 },
+                        py: { xs: 3, sm: 4 },
+                      }}
+                    >
+                      <Routes>
+                        {/* Trang đăng nhập - ai cũng truy cập được */}
+                        <Route path="/login" element={<Login />} />
+                        
+                        {/* Trang đăng ký - ai cũng truy cập được */}
+                        <Route path="/register" element={<Register />} />
+                        
+                        {/* Trang Home - chỉ truy cập được khi đã đăng nhập */}
+                        <Route
+                          path="/home"
+                          element={
+                            <ProtectedRoute>
+                              <Home />
+                            </ProtectedRoute>
+                          }
+                        />
+                        
+                        {/* Làm bài thi - chỉ học sinh mới vào được */}
+                        <Route
+                          path="/exam-taking"
+                          element={
+                            <ProtectedRoute>
+                              <ExamTaking />
+                            </ProtectedRoute>
+                          }
+                        />
+                        
+                        {/* Xem kết quả bài thi - chỉ học sinh mới vào được */}
+                        <Route
+                          path="/exam-result"
+                          element={
+                            <ProtectedRoute>
+                              <ExamResult />
+                            </ProtectedRoute>
+                          }
+                        />
+                        
+                        {/* Tham gia lớp học - chỉ học sinh mới vào được */}
+                        <Route
+                          path="/join-class"
+                          element={
+                            <ProtectedRoute>
+                              <JoinExamRoom />
+                            </ProtectedRoute>
+                          }
+                        />
+                        
+                        {/* Lớp học - chỉ học sinh mới vào được */}
+                        <Route
+                          path="/class-room"
+                          element={
+                            <ProtectedRoute>
+                              <ClassRoom />
+                            </ProtectedRoute>
+                          }
+                        />
+                        
+                        {/* Route mặc định: chuyển về trang phù hợp dựa trên role */}
+                        <Route
+                          path="/"
+                          element={
+                            <ProtectedRoute>
+                              <NavigateToRoleBasedHome />
+                            </ProtectedRoute>
+                          }
+                        />
+                      </Routes>
+                    </Box>
+                  </Box>
+                }
+              />
 
-            <Box
-              sx={{
-                flex: 1,
-                display: 'flex',
-                justifyContent: 'center',
-                px: { xs: 2, sm: 3 },
-                py: { xs: 3, sm: 4 },
-              }}
-            >
-              <Routes>
-                {/* Route: Định nghĩa các đường dẫn và component tương ứng */}
+              {/* Routes dùng TeacherLayout - Tất cả routes của giáo viên */}
+              <Route
+                element={
+                  <TeacherRoute>
+                    <TeacherLayout />
+                  </TeacherRoute>
+                }
+              >
+                {/* Dashboard giáo viên */}
+                <Route path="/teacher/dashboard" element={<TeacherDashboard />} />
                 
-                {/* Trang đăng nhập - ai cũng truy cập được */}
-                <Route path="/login" element={<Login />} />
+                {/* Quản lý câu hỏi */}
+                <Route path="/teacher/questions" element={<QuestionManagement />} />
                 
-                {/* Trang đăng ký - ai cũng truy cập được */}
-                <Route path="/register" element={<Register />} />
+                {/* Trang thêm câu hỏi */}
+                <Route path="/add-question" element={<AddQuestion />} />
                 
-                {/* Trang Home - chỉ truy cập được khi đã đăng nhập */}
-                <Route
-                  path="/home"
-                  element={
-                    <ProtectedRoute>
-                      <Home />
-                    </ProtectedRoute>
-                  }
-                />
+                {/* Trang chỉnh sửa câu hỏi */}
+                <Route path="/edit-question/:id" element={<EditQuestion />} />
                 
-                {/* Tham gia phòng thi - chỉ học sinh mới vào được */}
-                <Route
-                  path="/join-exam-room"
-                  element={
-                    <ProtectedRoute>
-                      <JoinExamRoom />
-                    </ProtectedRoute>
-                  }
-                />
+                {/* Quản lý đề thi */}
+                <Route path="/teacher/exams" element={<ExamManagement />} />
+
+                                
+                {/* Thông tin cá nhân giáo viên */}
+                <Route path="/teacher/profile" element={<TeacherProfile />} />
                 
-                {/* Phòng thi - chỉ học sinh mới vào được */}
-                <Route
-                  path="/exam-room"
-                  element={
-                    <ProtectedRoute>
-                      <ExamRoom />
-                    </ProtectedRoute>
-                  }
-                />
+                {/* Tạo đề thi */}
+                <Route path="/teacher/exams/create" element={<CreateExam />} />
                 
-                {/* Làm bài thi - chỉ học sinh mới vào được */}
-                <Route
-                  path="/exam-taking"
-                  element={
-                    <ProtectedRoute>
-                      <ExamTaking />
-                    </ProtectedRoute>
-                  }
-                />
+                {/* Chỉnh sửa đề thi */}
+                <Route path="/teacher/exams/edit/:id" element={<EditExam />} />
                 
-                {/* Xem kết quả bài thi - chỉ học sinh mới vào được */}
-                <Route
-                  path="/exam-result"
-                  element={
-                    <ProtectedRoute>
-                      <ExamResult />
-                    </ProtectedRoute>
-                  }
-                />
+                {/* Danh sách mã đề */}
+                <Route path="/teacher/exams/:examId/codes" element={<ExamCodeList />} />
                 
-                {/* Dashboard giáo viên - chỉ giáo viên mới vào được */}
-                <Route
-                  path="/teacher/dashboard"
-                  element={
-                    <TeacherRoute>
-                      <TeacherDashboard />
-                    </TeacherRoute>
-                  }
-                />
+                {/* Chi tiết mã đề */}
+                <Route path="/teacher/exam-codes/:id" element={<ExamCodeDetail />} />
                 
-                {/* Quản lý câu hỏi - chỉ giáo viên mới vào được */}
-                <Route
-                  path="/teacher/questions"
-                  element={
-                    <TeacherRoute>
-                      <QuestionManagement />
-                    </TeacherRoute>
-                  }
-                />
+                {/* Quản lý lớp học */}
+                <Route path="/teacher/classes" element={<ClassManagement />} />
                 
-                {/* Trang thêm câu hỏi - chỉ giáo viên mới vào được */}
-                <Route
-                  path="/add-question"
-                  element={
-                    <TeacherRoute>
-                      <AddQuestion />
-                    </TeacherRoute>
-                  }
-                />
+                {/* Tạo lớp học */}
+                <Route path="/teacher/classes/create" element={<CreateClass />} />
                 
-                {/* Trang chỉnh sửa câu hỏi - chỉ giáo viên mới vào được */}
-                <Route
-                  path="/edit-question/:id"
-                  element={
-                    <TeacherRoute>
-                      <EditQuestion />
-                    </TeacherRoute>
-                  }
-                />
+                {/* Chi tiết lớp học */}
+                <Route path="/teacher/classes/:id" element={<ClassDetail />} />
                 
-                {/* Quản lý đề thi - chỉ giáo viên mới vào được */}
-                <Route
-                  path="/teacher/exams"
-                  element={
-                    <TeacherRoute>
-                      <ExamManagement />
-                    </TeacherRoute>
-                  }
-                />
+                {/* Chỉnh sửa lớp học (deprecated, redirect to detail) */}
+                <Route path="/teacher/classes/edit/:id" element={<EditClass />} />
                 
-                {/* Tạo đề thi - chỉ giáo viên mới vào được */}
-                <Route
-                  path="/teacher/exams/create"
-                  element={
-                    <TeacherRoute>
-                      <CreateExam />
-                    </TeacherRoute>
-                  }
-                />
+                {/* Lịch sử thi theo lớp và đề thi */}
+                <Route path="/teacher/classes/history/:classId/exam/:examId" element={<ExamRoomHistory />} />
                 
-                {/* Chỉnh sửa đề thi - chỉ giáo viên mới vào được */}
-                <Route
-                  path="/teacher/exams/edit/:id"
-                  element={
-                    <TeacherRoute>
-                      <EditExam />
-                    </TeacherRoute>
-                  }
-                />
-                
-                {/* Danh sách mã đề - chỉ giáo viên mới vào được */}
-                <Route
-                  path="/teacher/exams/:examId/codes"
-                  element={
-                    <TeacherRoute>
-                      <ExamCodeList />
-                    </TeacherRoute>
-                  }
-                />
-                
-                {/* Chi tiết mã đề - chỉ giáo viên mới vào được */}
-                <Route
-                  path="/teacher/exam-codes/:id"
-                  element={
-                    <TeacherRoute>
-                      <ExamCodeDetail />
-                    </TeacherRoute>
-                  }
-                />
-                
-                {/* Quản lý phòng thi - chỉ giáo viên mới vào được */}
-                <Route
-                  path="/teacher/exam-rooms"
-                  element={
-                    <TeacherRoute>
-                      <ExamRoomManagement />
-                    </TeacherRoute>
-                  }
-                />
-                
-                {/* Tạo phòng thi - chỉ giáo viên mới vào được */}
-                <Route
-                  path="/teacher/exam-rooms/create"
-                  element={
-                    <TeacherRoute>
-                      <CreateExamRoom />
-                    </TeacherRoute>
-                  }
-                />
-                
-                {/* Chỉnh sửa phòng thi - chỉ giáo viên mới vào được */}
-                <Route
-                  path="/teacher/exam-rooms/edit/:id"
-                  element={
-                    <TeacherRoute>
-                      <EditExamRoom />
-                    </TeacherRoute>
-                  }
-                />
-                
-                {/* Lịch sử thi - chỉ giáo viên mới vào được */}
-                <Route
-                  path="/teacher/exam-rooms/history/:examRoomId"
-                  element={
-                    <TeacherRoute>
-                      <ExamRoomHistory />
-                    </TeacherRoute>
-                  }
-                />
-                
-                {/* Route mặc định: chuyển về trang phù hợp dựa trên role */}
-                <Route
-                  path="/"
-                  element={
-                    <ProtectedRoute>
-                      <NavigateToRoleBasedHome />
-                    </ProtectedRoute>
-                  }
-                />
-              </Routes>
-            </Box>
-          </Box>
-        </Router>
+                {/* Chi tiết bài làm của học sinh */}
+                <Route path="/teacher/exam-results/detail/:resultId" element={<ExamResultDetail />} />
+              </Route>
+            </Routes>
+          </Router>
         </AuthProvider>
       </ToastProvider>
     </ThemeProvider>
@@ -484,5 +423,3 @@ function App() {
 }
 
 export default App;
-
-

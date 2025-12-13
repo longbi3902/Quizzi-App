@@ -5,15 +5,20 @@ const router = Router();
 
 /**
  * @swagger
- * /api/exam-results/start/{examRoomId}:
+ * /api/exam-results/start/class/{classId}/exam/{examId}:
  *   post:
- *     summary: Bắt đầu làm bài thi
+ *     summary: Bắt đầu làm bài thi (logic mới theo lớp và đề thi)
  *     tags: [Exam Results]
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: examRoomId
+ *         name: classId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *       - in: path
+ *         name: examId
  *         required: true
  *         schema:
  *           type: integer
@@ -21,7 +26,8 @@ const router = Router();
  *       200:
  *         description: Bắt đầu làm bài thi thành công
  */
-router.post('/start/:examRoomId', examResultController.startExam.bind(examResultController));
+router.post('/start/class/:classId/exam/:examId', examResultController.startExam.bind(examResultController));
+
 
 /**
  * @swagger
@@ -38,10 +44,13 @@ router.post('/start/:examRoomId', examResultController.startExam.bind(examResult
  *           schema:
  *             type: object
  *             required:
- *               - examRoomId
+ *               - classId
+ *               - examId
  *               - answers
  *             properties:
- *               examRoomId:
+ *               classId:
+ *                 type: integer
+ *               examId:
  *                 type: integer
  *               examCodeId:
  *                 type: integer
@@ -65,15 +74,20 @@ router.post('/submit', examResultController.submitExam.bind(examResultController
 
 /**
  * @swagger
- * /api/exam-results/room/{examRoomId}:
+ * /api/exam-results/class/{classId}/exam/{examId}:
  *   get:
- *     summary: Lấy kết quả làm bài trong phòng thi (cho học sinh)
+ *     summary: Lấy kết quả làm bài trong lớp và đề thi (cho học sinh)
  *     tags: [Exam Results]
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: examRoomId
+ *         name: classId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *       - in: path
+ *         name: examId
  *         required: true
  *         schema:
  *           type: integer
@@ -81,17 +95,22 @@ router.post('/submit', examResultController.submitExam.bind(examResultController
  *       200:
  *         description: Lấy kết quả làm bài thành công
  */
-router.get('/room/:examRoomId', examResultController.getResultByRoom.bind(examResultController));
+router.get('/class/:classId/exam/:examId', examResultController.getResultByClassAndExam.bind(examResultController));
 
 /**
  * @swagger
- * /api/exam-results/room/{examRoomId}/all:
+ * /api/exam-results/class/{classId}/exam/{examId}/all:
  *   get:
- *     summary: Lấy lịch sử thi của tất cả học sinh trong phòng thi (cho giáo viên)
+ *     summary: Lấy lịch sử thi của tất cả học sinh trong lớp và đề thi (cho giáo viên)
  *     tags: [Exam Results]
  *     parameters:
  *       - in: path
- *         name: examRoomId
+ *         name: classId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *       - in: path
+ *         name: examId
  *         required: true
  *         schema:
  *           type: integer
@@ -99,7 +118,7 @@ router.get('/room/:examRoomId', examResultController.getResultByRoom.bind(examRe
  *       200:
  *         description: Lấy lịch sử thi thành công
  */
-router.get('/room/:examRoomId/all', examResultController.getResultsByRoom.bind(examResultController));
+router.get('/class/:classId/exam/:examId/all', examResultController.getResultsByClassAndExam.bind(examResultController));
 
 /**
  * @swagger
@@ -115,23 +134,6 @@ router.get('/room/:examRoomId/all', examResultController.getResultsByRoom.bind(e
  */
 router.get('/history', examResultController.getHistory.bind(examResultController));
 
-/**
- * @swagger
- * /api/exam-results/room/{examRoomId}:
- *   get:
- *     summary: Lấy lịch sử thi của tất cả học sinh trong phòng thi (cho giáo viên)
- *     tags: [Exam Results]
- *     parameters:
- *       - in: path
- *         name: examRoomId
- *         required: true
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: Lấy lịch sử thi thành công
- */
-router.get('/room/:examRoomId', examResultController.getResultsByRoom.bind(examResultController));
 
 /**
  * @swagger

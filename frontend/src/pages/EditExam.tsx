@@ -22,7 +22,6 @@ import {
   TableHead,
   TableRow,
 } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import { API_ENDPOINTS } from '../constants/api';
@@ -178,7 +177,7 @@ const EditExam: React.FC = () => {
 
   if (loadingData) {
     return (
-      <Container maxWidth="lg">
+      <Container maxWidth={false}>
         <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
           <CircularProgress />
         </Box>
@@ -192,13 +191,10 @@ const EditExam: React.FC = () => {
   );
 
   return (
-    <Container maxWidth="lg">
-      <Box sx={{ mt: 4, mb: 4 }}>
+    <Container maxWidth={false}>
+      <Box>
         <Paper elevation={3} sx={{ padding: 4 }}>
           <Box display="flex" alignItems="center" gap={2} mb={3}>
-            <IconButton onClick={() => navigate('/teacher/exams')}>
-              <ArrowBackIcon />
-            </IconButton>
             <Typography variant="h4" component="h1" sx={{ color: '#6366f1', fontWeight: 'bold' }}>
               CHỈNH SỬA ĐỀ THI
             </Typography>

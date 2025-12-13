@@ -61,7 +61,14 @@ export class ExamService {
   /**
    * Lấy tất cả đề thi với phân trang (chỉ của user)
    */
-  async findAllPaginated(page: number = 1, limit: number = 10, userId?: number | null): Promise<{
+  async findAllPaginated(
+    page: number = 1,
+    limit: number = 10,
+    userId?: number | null,
+    filters?: {
+      name?: string;
+    }
+  ): Promise<{
     data: ExamWithQuestions[];
     total: number;
     page: number;
@@ -70,13 +77,22 @@ export class ExamService {
   }> {
     try {
       // Xây dựng WHERE clause
-      let whereClause = '';
+      const conditions: string[] = [];
       const params: any[] = [];
       
       if (userId) {
-        whereClause = 'WHERE created_by = ?';
+        conditions.push('created_by = ?');
         params.push(userId);
       }
+
+      if (filters) {
+        if (filters.name && filters.name.trim()) {
+          conditions.push('name LIKE ?');
+          params.push(`%${filters.name.trim()}%`);
+        }
+      }
+
+      const whereClause = conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : '';
       
       // Đếm tổng số records
       const countRows = await query<{ count: number }[]>(

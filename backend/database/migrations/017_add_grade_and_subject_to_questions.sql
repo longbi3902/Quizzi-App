@@ -13,3 +13,5 @@ ADD CONSTRAINT fk_questions_subject FOREIGN KEY (subject_id) REFERENCES subjects
 CREATE INDEX idx_grade ON questions(grade);
 CREATE INDEX idx_subject_id ON questions(subject_id);
 
+
+

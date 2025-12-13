@@ -1,7 +1,7 @@
 export interface ExamResult {
   id: number;
   userId: number;
-  examRoomId: number;
+  classId: number | null; // ID lớp học
   examCodeId: number | null;
   examCode: string | null; // Mã đề (ví dụ: MĐ001)
   examId: number;
@@ -24,7 +24,7 @@ export interface CorrectAnswer {
 }
 
 export interface StartExamResponse {
-  examRoomId: number;
+  classId: number;
   examId: number;
   examCodeId: number | null;
   examCode: string | null;
@@ -52,13 +52,14 @@ export interface ExamQuestionForTaking {
 }
 
 export interface SubmitExamDTO {
-  examRoomId: number;
+  classId: number;
+  examId: number;
   examCodeId: number | null;
   answers: StudentAnswer[];
 }
 
 export interface ExamResultWithDetails extends ExamResult {
-  examRoom: {
+  class: {
     id: number;
     name: string;
     code: string;

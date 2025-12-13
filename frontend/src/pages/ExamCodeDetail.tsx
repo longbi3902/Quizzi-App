@@ -17,7 +17,6 @@ import {
   Card,
   CardContent,
 } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { API_ENDPOINTS } from '../constants/api';
 import { ExamCodeWithExam } from '../types/exam.types';
 import { getDifficultyName, getDifficultyColor } from '../utils/questionUtils';
@@ -87,15 +86,10 @@ const ExamCodeDetail: React.FC = () => {
 
   if (error || !examCode || !examCode.exam) {
     return (
-      <Container maxWidth="lg">
-        <Box sx={{ mt: 4, mb: 4 }}>
+      <Container maxWidth={false}>
+        <Box>
           <Paper elevation={3} sx={{ padding: 4 }}>
             <Alert severity="error">{error || 'Không tìm thấy mã đề'}</Alert>
-            <Box mt={2}>
-              <IconButton onClick={() => navigate(-1)}>
-                <ArrowBackIcon />
-              </IconButton>
-            </Box>
           </Paper>
         </Box>
       </Container>
@@ -105,13 +99,10 @@ const ExamCodeDetail: React.FC = () => {
   const orderedQuestions = getOrderedQuestions();
 
   return (
-    <Container maxWidth="lg">
-      <Box sx={{ mt: 4, mb: 4 }}>
+    <Container maxWidth={false}>
+      <Box>
         <Paper elevation={3} sx={{ padding: 4 }}>
           <Box display="flex" alignItems="center" gap={2} mb={3}>
-            <IconButton onClick={() => navigate(-1)}>
-              <ArrowBackIcon />
-            </IconButton>
             <Typography variant="h4" component="h1" sx={{ color: '#6366f1', fontWeight: 'bold' }}>
               Chi tiết mã đề: {examCode.code}
             </Typography>

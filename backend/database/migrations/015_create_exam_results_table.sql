@@ -24,3 +24,5 @@ CREATE TABLE IF NOT EXISTS exam_results (
   UNIQUE KEY unique_user_exam_room (user_id, exam_room_id) COMMENT 'Mỗi học sinh chỉ được làm 1 lần mỗi phòng thi'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+
+

@@ -48,3 +48,5 @@ UPDATE exam_rooms er
 SET er.created_by = (SELECT id FROM users WHERE role = 'teacher' LIMIT 1)
 WHERE er.created_by IS NULL;
 
+
+

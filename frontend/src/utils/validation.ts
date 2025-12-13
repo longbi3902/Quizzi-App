@@ -46,6 +46,19 @@ export const isValidBirthYear = (birthYear: number): boolean => {
   return birthYear >= minYear && birthYear <= currentYear;
 };
 
+/**
+ * Kiểm tra số điện thoại Việt Nam có hợp lệ không
+ * @param phone - Số điện thoại cần kiểm tra
+ * @returns true nếu hợp lệ, false nếu không
+ */
+export const isValidPhoneNumber = (phone: string): boolean => {
+  // Regex cho số điện thoại Việt Nam: 10 số, bắt đầu bằng 03, 05, 07, 08, hoặc 09
+  const phoneRegex = /^(0[3|5|7|8|9])+([0-9]{8})$/;
+  return phoneRegex.test(phone.trim());
+};
+
+
+
 
 
 

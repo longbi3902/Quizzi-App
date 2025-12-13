@@ -24,43 +24,43 @@ import {
 } from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
 import { API_ENDPOINTS } from '../constants/api';
-import { ExamRoomWithExam } from '../types/examRoom.types';
+import { ClassWithExams } from '../types/class.types';
 import apiClient from '../utils/apiClient';
 
 const Home: React.FC = () => {
   // Lấy thông tin user và hàm logout từ AuthContext
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [participatedRooms, setParticipatedRooms] = useState<ExamRoomWithExam[]>([]);
-  const [loadingRooms, setLoadingRooms] = useState(false);
+  const [participatedClasses, setParticipatedClasses] = useState<ClassWithExams[]>([]);
+  const [loadingClasses, setLoadingClasses] = useState(false);
   const [error, setError] = useState('');
 
   /**
-   * Load danh sách phòng thi đã tham gia
+   * Load danh sách lớp học đã tham gia
    */
   useEffect(() => {
     if (user?.role === 'student') {
-      const fetchParticipatedRooms = async () => {
+      const fetchParticipatedClasses = async () => {
         try {
-          setLoadingRooms(true);
+          setLoadingClasses(true);
           setError('');
-          const response = await apiClient.get(API_ENDPOINTS.EXAM_ROOMS_PARTICIPATED);
+          const response = await apiClient.get(API_ENDPOINTS.CLASSES_PARTICIPATED);
           const data = await response.json();
 
           if (response.ok && data.success) {
-            setParticipatedRooms(data.data || []);
+            setParticipatedClasses(data.data || []);
           } else {
-            setError(data.message || 'Không thể tải danh sách phòng thi');
+            setError(data.message || 'Không thể tải danh sách lớp học');
           }
         } catch (err: any) {
-          console.error('Error fetching participated rooms:', err);
-          setError(err.message || 'Không thể tải danh sách phòng thi');
+          console.error('Error fetching participated classes:', err);
+          setError(err.message || 'Không thể tải danh sách lớp học');
         } finally {
-          setLoadingRooms(false);
+          setLoadingClasses(false);
         }
       };
 
-      fetchParticipatedRooms();
+      fetchParticipatedClasses();
     }
   }, [user]);
 
@@ -73,13 +73,13 @@ const Home: React.FC = () => {
   };
 
   /**
-   * Xử lý khi click vào phòng thi đã tham gia
+   * Xử lý khi click vào lớp học đã tham gia
    */
-  const handleRoomClick = (room: ExamRoomWithExam) => {
-    // Lưu thông tin phòng thi vào localStorage
-    localStorage.setItem('currentExamRoom', JSON.stringify(room));
-    // Chuyển đến trang phòng thi
-    navigate('/exam-room');
+  const handleClassClick = (classData: ClassWithExams) => {
+    // Lưu thông tin lớp học vào localStorage
+    localStorage.setItem('currentClass', JSON.stringify(classData));
+    // Chuyển đến trang lớp học
+    navigate('/class-room');
   };
 
   return (
@@ -180,21 +180,21 @@ const Home: React.FC = () => {
             Đây là trang chủ của ứng dụng thi trắc nghiệm. Các tính năng sẽ được phát triển tiếp theo.
           </Typography>
 
-          {/* Nút Tham gia phòng thi - chỉ hiển thị cho học sinh */}
+          {/* Nút Tham gia lớp học - chỉ hiển thị cho học sinh */}
           {user?.role === 'student' && (
             <Box>
               <Button
                 variant="contained"
                 size="large"
-                onClick={() => navigate('/join-exam-room')}
+                onClick={() => navigate('/join-class')}
                 sx={{ minWidth: 200, mb: 3 }}
               >
-                Tham gia phòng thi
+                Tham gia lớp học
               </Button>
 
-              {/* Danh sách phòng thi đã tham gia */}
+              {/* Danh sách lớp học đã tham gia */}
               <Typography variant="h6" gutterBottom sx={{ mt: 4, mb: 2 }}>
-                Phòng thi đã tham gia
+                Lớp học đã tham gia
               </Typography>
 
               {error && (
@@ -203,18 +203,18 @@ const Home: React.FC = () => {
                 </Alert>
               )}
 
-              {loadingRooms ? (
+              {loadingClasses ? (
                 <Box display="flex" justifyContent="center" py={4}>
                   <CircularProgress />
                 </Box>
-              ) : participatedRooms.length === 0 ? (
+              ) : participatedClasses.length === 0 ? (
                 <Typography variant="body2" color="text.secondary">
-                  Bạn chưa tham gia phòng thi nào
+                  Bạn chưa tham gia lớp học nào
                 </Typography>
               ) : (
                 <Grid container spacing={2}>
-                  {participatedRooms.map((room) => (
-                    <Grid item xs={12} sm={6} md={4} key={room.id}>
+                  {participatedClasses.map((classData) => (
+                    <Grid item xs={12} sm={6} md={4} key={classData.id}>
                       <Card
                         sx={{
                           cursor: 'pointer',
@@ -224,40 +224,21 @@ const Home: React.FC = () => {
                             boxShadow: 6,
                           },
                         }}
-                        onClick={() => handleRoomClick(room)}
+                        onClick={() => handleClassClick(classData)}
                       >
                         <CardContent>
                           <Box display="flex" justifyContent="space-between" alignItems="start" mb={1}>
                             <Typography variant="h6" component="h3" sx={{ flex: 1 }}>
-                              {room.name}
+                              {classData.name}
                             </Typography>
-                            <Chip label={room.code} color="primary" size="small" />
+                            <Chip label={classData.code} color="primary" size="small" />
                           </Box>
-                          {room.exam && (
-                            <>
-                              <Typography variant="body2" color="text.secondary" gutterBottom>
-                                Đề thi: {room.exam.name}
-                              </Typography>
-                              <Typography variant="body2" color="text.secondary">
-                                Thời gian: {room.exam.duration} phút | Điểm: {room.exam.maxScore}
-                              </Typography>
-                              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                                Diễn ra: {new Date(room.startDate).toLocaleString('vi-VN', {
-                                  year: 'numeric',
-                                  month: '2-digit',
-                                  day: '2-digit',
-                                  hour: '2-digit',
-                                  minute: '2-digit',
-                                })} - {new Date(room.endDate).toLocaleString('vi-VN', {
-                                  year: 'numeric',
-                                  month: '2-digit',
-                                  day: '2-digit',
-                                  hour: '2-digit',
-                                  minute: '2-digit',
-                                })}
-                              </Typography>
-                            </>
-                          )}
+                          <Typography variant="body2" color="text.secondary" gutterBottom>
+                            Số đề thi: {classData.exams?.length || 0}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                            Mỗi đề thi có thời gian bắt đầu và kết thúc riêng
+                          </Typography>
                         </CardContent>
                       </Card>
                     </Grid>

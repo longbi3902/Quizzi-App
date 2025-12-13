@@ -6,6 +6,7 @@ import { SubmitExamDTO } from '../types/examResult.types';
 export class ExamResultController {
   /**
    * Bắt đầu làm bài thi
+   * Logic mới: Nhận classId và examId
    */
   async startExam(req: Request, res: Response) {
     try {
@@ -17,15 +18,17 @@ export class ExamResultController {
         });
       }
 
-      const examRoomId = Number.parseInt(req.params.examRoomId, 10);
-      if (isNaN(examRoomId)) {
+      const classId = Number.parseInt(req.params.classId, 10);
+      const examId = Number.parseInt(req.params.examId, 10);
+      
+      if (isNaN(classId) || isNaN(examId)) {
         return res.status(400).json({
           success: false,
-          message: 'ID phòng thi không hợp lệ',
+          message: 'ID lớp học hoặc ID đề thi không hợp lệ',
         });
       }
 
-      const startExamData = await examResultService.startExam(userId, examRoomId);
+      const startExamData = await examResultService.startExam(userId, classId, examId);
 
       res.json({
         success: true,
@@ -57,7 +60,7 @@ export class ExamResultController {
 
       const submitData: SubmitExamDTO = req.body;
 
-      if (!submitData.examRoomId || !submitData.answers) {
+      if (!submitData.classId || !submitData.examId || !submitData.answers) {
         return res.status(400).json({
           success: false,
           message: 'Vui lòng cung cấp đầy đủ thông tin',
@@ -82,9 +85,9 @@ export class ExamResultController {
   }
 
   /**
-   * Lấy kết quả làm bài của học sinh trong phòng thi
+   * Lấy kết quả làm bài của học sinh trong lớp và đề thi
    */
-  async getResultByRoom(req: Request, res: Response) {
+  async getResultByClassAndExam(req: Request, res: Response) {
     try {
       const userId = getUserIdFromToken(req);
       if (!userId) {
@@ -94,15 +97,17 @@ export class ExamResultController {
         });
       }
 
-      const examRoomId = Number.parseInt(req.params.examRoomId, 10);
-      if (isNaN(examRoomId)) {
+      const classId = Number.parseInt(req.params.classId, 10);
+      const examId = Number.parseInt(req.params.examId, 10);
+      
+      if (isNaN(classId) || isNaN(examId)) {
         return res.status(400).json({
           success: false,
-          message: 'ID phòng thi không hợp lệ',
+          message: 'ID lớp học hoặc ID đề thi không hợp lệ',
         });
       }
 
-      const result = await examResultService.findByUserAndRoom(userId, examRoomId);
+      const result = await examResultService.findByUserAndClassAndExam(userId, classId, examId);
 
       if (!result) {
         return res.status(404).json({
@@ -125,6 +130,7 @@ export class ExamResultController {
       });
     }
   }
+
 
   /**
    * Lấy lịch sử làm bài của học sinh
@@ -157,15 +163,17 @@ export class ExamResultController {
   }
 
   /**
-   * Lấy lịch sử thi của tất cả học sinh trong phòng thi (cho giáo viên)
+   * Lấy lịch sử thi của tất cả học sinh trong lớp và đề thi (cho giáo viên)
    */
-  async getResultsByRoom(req: Request, res: Response) {
+  async getResultsByClassAndExam(req: Request, res: Response) {
     try {
-      const examRoomId = Number.parseInt(req.params.examRoomId, 10);
-      if (isNaN(examRoomId)) {
+      const classId = Number.parseInt(req.params.classId, 10);
+      const examId = Number.parseInt(req.params.examId, 10);
+      
+      if (isNaN(classId) || isNaN(examId)) {
         return res.status(400).json({
           success: false,
-          message: 'ID phòng thi không hợp lệ',
+          message: 'ID lớp học hoặc ID đề thi không hợp lệ',
         });
       }
 
@@ -176,7 +184,7 @@ export class ExamResultController {
       const page = Number.parseInt(req.query.page as string, 10) || 1;
       const limit = Number.parseInt(req.query.limit as string, 10) || 10;
 
-      const result = await examResultService.getResultsByRoom(examRoomId, {
+      const result = await examResultService.getResultsByClassAndExam(classId, examId, {
         studentName,
         scoreSort,
         durationSort,
@@ -196,7 +204,7 @@ export class ExamResultController {
         },
       });
     } catch (error: any) {
-      console.error('Get results by room error:', error);
+      console.error('Get results by class and exam error:', error);
       res.status(500).json({
         success: false,
         message: error.message || 'Lỗi server khi lấy lịch sử thi',

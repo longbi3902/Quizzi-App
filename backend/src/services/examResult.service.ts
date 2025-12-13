@@ -8,7 +8,7 @@ import {
   ExamResultWithDetails,
 } from '../types/examResult.types';
 import { query } from '../config/database';
-import examRoomService from './examRoom.service';
+import classService from './class.service';
 import examCodeService from './examCode.service';
 import examService from './exam.service';
 import questionService from './question.service';
@@ -16,7 +16,7 @@ import questionService from './question.service';
 interface ExamResultRow {
   id: number;
   user_id: number;
-  exam_room_id: number;
+  class_id: number | null;
   exam_code_id: number | null;
   exam_id: number;
   started_at: Date;
@@ -32,22 +32,42 @@ export class ExamResultService {
   /**
    * Bắt đầu làm bài thi
    * Random mã đề (nếu có) hoặc lấy đề gốc
+   * Logic mới: Nhận classId và examId (vì trong lớp có nhiều đề thi)
    */
-  async startExam(userId: number, examRoomId: number): Promise<StartExamResponse> {
+  async startExam(userId: number, classId: number, examId: number): Promise<StartExamResponse> {
     try {
-      // Kiểm tra đã làm bài chưa
-      const existingResult = await this.findByUserAndRoom(userId, examRoomId);
+      // Kiểm tra đã làm bài chưa (theo classId và examId)
+      const existingResult = await this.findByUserAndClassAndExam(userId, classId, examId);
       if (existingResult) {
         throw new Error('Bạn đã làm bài thi này rồi');
       }
 
-      // Lấy thông tin phòng thi
-      const examRoom = await examRoomService.findById(examRoomId);
-      if (!examRoom || !examRoom.exam) {
-        throw new Error('Phòng thi không tồn tại');
+      // Lấy thông tin lớp học
+      const classData = await classService.findByIdForStudent(classId);
+      if (!classData) {
+        throw new Error('Lớp học không tồn tại');
       }
 
-      const exam = examRoom.exam;
+      // Kiểm tra đề thi có trong lớp không
+      const examInClass = classData.exams.find(e => e.id === examId);
+      if (!examInClass) {
+        throw new Error('Đề thi không có trong lớp học này');
+      }
+
+      // Kiểm tra thời gian cho phép thi
+      const now = new Date();
+      const startDate = new Date(examInClass.startDate);
+      const endDate = new Date(examInClass.endDate);
+
+      if (now < startDate) {
+        throw new Error('Chưa đến thời gian bắt đầu thi');
+      }
+
+      if (now > endDate) {
+        throw new Error('Đã hết thời gian thi');
+      }
+
+      const exam = examInClass;
       let examCodeId: number | null = null;
       let examCode: string | null = null;
       let questionOrder: number[] = [];
@@ -128,11 +148,12 @@ export class ExamResultService {
       // Tạo record exam_result với trạng thái đang làm
       const startTime = new Date();
       await query(
-        `INSERT INTO exam_results (user_id, exam_room_id, exam_code_id, exam_id, started_at, max_score, answers)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO exam_results (user_id, exam_room_id, class_id, exam_code_id, exam_id, started_at, max_score, answers)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           userId,
-          examRoomId,
+          null, // exam_room_id deprecated, set NULL
+          classId,
           examCodeId,
           exam.id,
           startTime,
@@ -142,7 +163,7 @@ export class ExamResultService {
       );
 
       return {
-        examRoomId,
+        classId,
         examId: exam.id,
         examCodeId,
         examCode,
@@ -162,8 +183,8 @@ export class ExamResultService {
    */
   async submitExam(userId: number, submitData: SubmitExamDTO): Promise<ExamResult> {
     try {
-      // Lấy kết quả hiện tại
-      const result = await this.findByUserAndRoom(userId, submitData.examRoomId);
+      // Lấy kết quả hiện tại (theo classId và examId)
+      const result = await this.findByUserAndClassAndExam(userId, submitData.classId, submitData.examId);
       if (!result) {
         throw new Error('Không tìm thấy bài thi');
       }
@@ -243,9 +264,9 @@ export class ExamResultService {
   }
 
   /**
-   * Lấy kết quả theo user và room
+   * Lấy kết quả theo user, class và exam
    */
-  async findByUserAndRoom(userId: number, examRoomId: number): Promise<ExamResult | null> {
+  async findByUserAndClassAndExam(userId: number, classId: number, examId: number): Promise<ExamResult | null> {
     try {
       interface ResultRow extends ExamResultRow {
         exam_code: string | null;
@@ -255,8 +276,8 @@ export class ExamResultService {
         `SELECT er.*, ec.code as exam_code
          FROM exam_results er
          LEFT JOIN exam_codes ec ON er.exam_code_id = ec.id
-         WHERE er.user_id = ? AND er.exam_room_id = ?`,
-        [userId, examRoomId]
+         WHERE er.user_id = ? AND er.class_id = ? AND er.exam_id = ?`,
+        [userId, classId, examId]
       );
 
       if (rows.length === 0) {
@@ -270,10 +291,11 @@ export class ExamResultService {
         examCode: rows[0].exam_code || null,
       };
     } catch (error) {
-      console.error('Error finding exam result by user and room:', error);
+      console.error('Error finding exam result by user, class and exam:', error);
       throw error;
     }
   }
+
 
   /**
    * Lấy kết quả theo ID
@@ -297,11 +319,12 @@ export class ExamResultService {
   }
 
   /**
-   * Lấy lịch sử thi của tất cả học sinh trong phòng thi (cho giáo viên)
+   * Lấy lịch sử thi của tất cả học sinh trong lớp và đề thi (cho giáo viên)
    * Với bộ lọc và phân trang
    */
-  async getResultsByRoom(
-    examRoomId: number,
+  async getResultsByClassAndExam(
+    classId: number,
+    examId: number,
     options: {
       studentName?: string;
       scoreSort?: 'asc' | 'desc' | 'none';
@@ -331,8 +354,8 @@ export class ExamResultService {
       } = options;
 
       // Xây dựng WHERE clause
-      let whereClause = 'WHERE er.exam_room_id = ?';
-      const params: any[] = [examRoomId];
+      let whereClause = 'WHERE er.class_id = ? AND er.exam_id = ?';
+      const params: any[] = [classId, examId];
 
       if (studentName.trim()) {
         whereClause += ' AND u.name LIKE ?';
@@ -425,10 +448,11 @@ export class ExamResultService {
         totalPages,
       };
     } catch (error) {
-      console.error('Error getting results by room:', error);
+      console.error('Error getting results by class and exam:', error);
       throw error;
     }
   }
+
 
   /**
    * Lấy chi tiết bài làm của học sinh (cho giáo viên)
@@ -444,9 +468,9 @@ export class ExamResultService {
         exam_name: string;
         exam_duration: number;
         exam_max_score: number;
-        room_id: number;
-        room_name: string;
-        room_code: string;
+        class_id: number;
+        class_name: string;
+        class_code: string;
       }
 
       const rows = await query<DetailRow[]>(
@@ -454,12 +478,12 @@ export class ExamResultService {
                 u.id as user_id, u.name as user_name, u.email as user_email,
                 ec.code as exam_code,
                 e.id as exam_id, e.name as exam_name, e.duration as exam_duration, e.max_score as exam_max_score,
-                er2.id as room_id, er2.name as room_name, er2.code as room_code
+                c.id as class_id, c.name as class_name, c.code as class_code
          FROM exam_results er
          INNER JOIN users u ON er.user_id = u.id
          LEFT JOIN exam_codes ec ON er.exam_code_id = ec.id
          INNER JOIN exams e ON er.exam_id = e.id
-         INNER JOIN exam_rooms er2 ON er.exam_room_id = er2.id
+         INNER JOIN classes c ON er.class_id = c.id
          WHERE er.id = ?`,
         [resultId]
       );
@@ -491,10 +515,10 @@ export class ExamResultService {
           duration: row.exam_duration,
           maxScore: Number(row.exam_max_score),
         },
-        examRoom: {
-          id: row.room_id,
-          name: row.room_name,
-          code: row.room_code,
+        class: {
+          id: row.class_id,
+          name: row.class_name,
+          code: row.class_code,
         },
         questions: exam.questions,
         duration: row.submitted_at
@@ -513,9 +537,9 @@ export class ExamResultService {
   async getHistoryByUser(userId: number): Promise<ExamResultWithDetails[]> {
     try {
       interface HistoryRow extends ExamResultRow {
-        room_id: number;
-        room_name: string;
-        room_code: string;
+        class_id: number;
+        class_name: string;
+        class_code: string;
         start_date: Date;
         end_date: Date;
         exam_id_detail: number;
@@ -528,12 +552,12 @@ export class ExamResultService {
 
       const rows = await query<HistoryRow[]>(
         `SELECT er.*, 
-                er2.id as room_id, er2.name as room_name, er2.code as room_code, 
-                er2.start_date, er2.end_date,
+                c.id as class_id, c.name as class_name, c.code as class_code, 
+                c.start_date, c.end_date,
                 e.id as exam_id_detail, e.name as exam_name, e.duration, e.max_score as exam_max_score,
                 ec.id as code_id, ec.code as code_code
          FROM exam_results er
-         INNER JOIN exam_rooms er2 ON er.exam_room_id = er2.id
+         INNER JOIN classes c ON er.class_id = c.id
          INNER JOIN exams e ON er.exam_id = e.id
          LEFT JOIN exam_codes ec ON er.exam_code_id = ec.id
          WHERE er.user_id = ?
@@ -543,10 +567,10 @@ export class ExamResultService {
 
       return rows.map((row) => ({
         ...this.mapRowToExamResult(row),
-        examRoom: {
-          id: row.room_id,
-          name: row.room_name,
-          code: row.room_code,
+        class: {
+          id: row.class_id,
+          name: row.class_name,
+          code: row.class_code,
           startDate: row.start_date,
           endDate: row.end_date,
         },
@@ -593,7 +617,7 @@ export class ExamResultService {
     return {
       id: row.id,
       userId: row.user_id,
-      examRoomId: row.exam_room_id,
+      classId: row.class_id || null,
       examCodeId: row.exam_code_id,
       examCode: row.exam_code || null,
       examId: row.exam_id,

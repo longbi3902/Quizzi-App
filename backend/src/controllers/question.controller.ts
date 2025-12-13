@@ -16,7 +16,7 @@ export class QuestionController {
       if (page !== undefined && limit !== undefined) {
         // Sử dụng pagination với filter
         const filters = {
-          name: req.query.name as string | undefined,
+          name: (req.query.content || req.query.name) as string | undefined, // Support both 'content' and 'name' for backward compatibility
           subjectId: req.query.subjectId
             ? Number.parseInt(req.query.subjectId as string, 10)
             : undefined,

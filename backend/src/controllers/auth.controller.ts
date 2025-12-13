@@ -22,6 +22,17 @@ export class AuthController {
         });
       }
 
+      // Validate phone number nếu có
+      if (userData.phone && userData.phone.trim()) {
+        const phoneRegex = /^(0[3|5|7|8|9])+([0-9]{8})$/;
+        if (!phoneRegex.test(userData.phone.trim())) {
+          return res.status(400).json({
+            success: false,
+            message: 'Số điện thoại không hợp lệ. Vui lòng nhập số điện thoại Việt Nam (10 số, bắt đầu bằng 03, 05, 07, 08, hoặc 09)'
+          });
+        }
+      }
+
       // Check if email already exists
       const existingUser = await userService.findByEmail(userData.email);
       if (existingUser) {
@@ -262,6 +273,78 @@ export class AuthController {
         success: false,
         message: 'Lỗi server khi đăng xuất',
         error: error.message,
+      });
+    }
+  }
+
+  /**
+   * Cập nhật thông tin cá nhân
+   */
+  async updateProfile(req: Request, res: Response) {
+    try {
+      const userId = Number.parseInt(req.params.id, 10);
+      const updateData = req.body;
+
+      // Validate user ID
+      if (isNaN(userId)) {
+        return res.status(400).json({
+          success: false,
+          message: 'ID người dùng không hợp lệ'
+        });
+      }
+
+      // Kiểm tra user có tồn tại không
+      const existingUser = await userService.findById(userId);
+      if (!existingUser) {
+        return res.status(404).json({
+          success: false,
+          message: 'Không tìm thấy người dùng'
+        });
+      }
+
+      // Validate phone number nếu có
+      if (updateData.phone && updateData.phone.trim()) {
+        const phoneRegex = /^(0[3|5|7|8|9])+([0-9]{8})$/;
+        if (!phoneRegex.test(updateData.phone.trim())) {
+          return res.status(400).json({
+            success: false,
+            message: 'Số điện thoại không hợp lệ. Vui lòng nhập số điện thoại Việt Nam (10 số, bắt đầu bằng 03, 05, 07, 08, hoặc 09)'
+          });
+        }
+      }
+
+      // Cập nhật user
+      const updatedUser = await userService.update(userId, {
+        name: updateData.name,
+        birthYear: updateData.birthYear !== undefined ? (updateData.birthYear || null) : undefined,
+        className: updateData.className !== undefined ? (updateData.className || null) : undefined,
+        school: updateData.school,
+        phone: updateData.phone !== undefined ? (updateData.phone || null) : undefined,
+      });
+
+      if (!updatedUser) {
+        return res.status(404).json({
+          success: false,
+          message: 'Không thể cập nhật thông tin người dùng'
+        });
+      }
+
+      // Return user data without password
+      const { password, ...userWithoutPassword } = updatedUser;
+
+      res.json({
+        success: true,
+        message: 'Cập nhật thông tin thành công',
+        data: {
+          user: userWithoutPassword
+        }
+      });
+    } catch (error: any) {
+      console.error('Update profile error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Lỗi server khi cập nhật thông tin',
+        error: error.message
       });
     }
   }

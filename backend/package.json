@@ -9,7 +9,9 @@
     "start": "node dist/index.js",
     "migrate": "ts-node scripts/run-migrations.ts",
     "check-migrations": "ts-node scripts/check-migrations.ts",
-    "fix-exam-codes": "ts-node scripts/fix-exam-codes.ts"
+    "fix-exam-codes": "ts-node scripts/fix-exam-codes.ts",
+    "reset-db": "ts-node scripts/reset-database.ts",
+    "clear-migrations": "ts-node scripts/clear-migrations.ts"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

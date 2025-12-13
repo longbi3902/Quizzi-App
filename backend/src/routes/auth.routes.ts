@@ -132,5 +132,47 @@ router.post('/refresh', authController.refreshToken.bind(authController));
  */
 router.post('/logout', authController.logout.bind(authController));
 
+/**
+ * @swagger
+ * /api/auth/profile/{id}:
+ *   put:
+ *     summary: Cập nhật thông tin cá nhân
+ *     tags: [Authentication]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID của người dùng
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               birthYear:
+ *                 type: integer
+ *               className:
+ *                 type: string
+ *               school:
+ *                 type: string
+ *               phone:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Cập nhật thành công
+ *       400:
+ *         description: Dữ liệu không hợp lệ
+ *       404:
+ *         description: Không tìm thấy người dùng
+ *       500:
+ *         description: Lỗi server
+ */
+router.put('/profile/:id', authController.updateProfile.bind(authController));
+
 export default router;
 

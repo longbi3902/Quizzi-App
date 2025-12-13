@@ -22,10 +22,11 @@ interface AuthContextType {
   accessToken: string | null; // Access token để xác thực (null nếu chưa đăng nhập)
   refreshToken: string | null; // Refresh token để lấy lại access token
   isLoading: boolean; // Đang load từ localStorage
-  login: (email: string, password: string) => Promise<void>; // Hàm đăng nhập
+  login: (email: string, password: string) => Promise<User>; // Hàm đăng nhập
   register: (userData: RegisterData) => Promise<void>; // Hàm đăng ký
   logout: () => void; // Hàm đăng xuất
   refreshAccessToken: () => Promise<boolean>; // Hàm refresh access token
+  setUser: (user: User | null) => void; // Hàm cập nhật user
 }
 
 // Định nghĩa kiểu dữ liệu cho form đăng ký
@@ -253,14 +254,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       // Lưu thông tin user và tokens vào state
-      setUser(data.data.user);
+      const loggedInUser = data.data.user;
+      setUser(loggedInUser);
       setAccessToken(data.data.accessToken);
       setRefreshToken(data.data.refreshToken);
       
       // Lưu vào localStorage để giữ đăng nhập khi refresh trang
-      localStorage.setItem('user', JSON.stringify(data.data.user));
+      localStorage.setItem('user', JSON.stringify(loggedInUser));
       localStorage.setItem('accessToken', data.data.accessToken);
       localStorage.setItem('refreshToken', data.data.refreshToken);
+      
+      // Trả về user để component có thể sử dụng
+      return loggedInUser;
     } catch (error: any) {
       console.error('Login error:', error);
       
@@ -356,7 +361,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Chỉ tạo lại object value khi user hoặc tokens thay đổi
   // Tránh re-render không cần thiết cho các component con
   const value = useMemo(
-    () => ({ user, accessToken, refreshToken, isLoading, login, register, logout, refreshAccessToken }),
+    () => ({ user, accessToken, refreshToken, isLoading, login, register, logout, refreshAccessToken, setUser }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [user, accessToken, refreshToken, isLoading]
   );

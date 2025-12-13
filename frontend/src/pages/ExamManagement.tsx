@@ -26,11 +26,12 @@ import {
   Chip,
   Pagination,
   Stack,
+  TextField,
+  Grid,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import ListIcon from '@mui/icons-material/List';
 import { API_ENDPOINTS } from '../constants/api';
@@ -50,6 +51,7 @@ const ExamManagement: React.FC = () => {
   const [limit] = useState(10);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
+  const [nameFilter, setNameFilter] = useState<string>('');
 
   const fetchExams = async () => {
     try {
@@ -58,6 +60,11 @@ const ExamManagement: React.FC = () => {
       const params = new URLSearchParams();
       params.append('page', page.toString());
       params.append('limit', limit.toString());
+      
+      // Thêm filter theo tên đề thi
+      if (nameFilter.trim()) {
+        params.append('name', nameFilter.trim());
+      }
       
       const response = await apiClient.get(`${API_ENDPOINTS.EXAMS}?${params.toString()}`);
       const data = await response.json();
@@ -118,18 +125,13 @@ const ExamManagement: React.FC = () => {
   }, [page]);
 
   return (
-    <Container maxWidth="lg">
-      <Box sx={{ mt: 4, mb: 4 }}>
+    <Container maxWidth={false}>
+      <Box>
         <Paper elevation={3} sx={{ padding: 4 }}>
           <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-            <Box display="flex" alignItems="center" gap={2}>
-              <IconButton onClick={() => navigate('/teacher/dashboard')}>
-                <ArrowBackIcon />
-              </IconButton>
-              <Typography variant="h4" component="h1" sx={{ color: '#6366f1', fontWeight: 'bold' }}>
-                Quản lý đề thi
-              </Typography>
-            </Box>
+            <Typography variant="h4" component="h1" sx={{ color: '#6366f1', fontWeight: 'bold' }}>
+              Quản lý đề thi
+            </Typography>
             <Button
               variant="contained"
               startIcon={<AddIcon />}
@@ -144,6 +146,32 @@ const ExamManagement: React.FC = () => {
               {error}
             </Alert>
           )}
+
+          {/* Search Section */}
+          <Box sx={{ mb: 3 }}>
+            <Grid container spacing={2} alignItems="center">
+              <Grid item xs={12} sm={6} md={3}>
+                <TextField
+                  size="small"
+                  label="Tìm kiếm theo tên đề thi"
+                  value={nameFilter}
+                  onChange={(e) => setNameFilter(e.target.value)}
+                  placeholder="Nhập tên đề thi..."
+                  sx={{ width: '100%', '& .MuiInputBase-root': { height: '40px' } }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6} md={2.4}>
+                <Button
+                  fullWidth
+                  variant="outlined"
+                  onClick={() => setNameFilter('')}
+                  sx={{ height: '40px' }}
+                >
+                  Xóa bộ lọc
+                </Button>
+              </Grid>
+            </Grid>
+          </Box>
 
           {loading ? (
             <Box display="flex" justifyContent="center" py={4}>

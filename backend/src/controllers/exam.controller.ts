@@ -14,7 +14,11 @@ export class ExamController {
       const limit = req.query.limit ? Number.parseInt(req.query.limit as string, 10) : undefined;
 
       if (page !== undefined && limit !== undefined) {
-        // Sử dụng pagination
+        // Sử dụng pagination với filter
+        const filters = {
+          name: req.query.name as string | undefined,
+        };
+
         const userId = getUserIdFromToken(req);
         if (!userId) {
           return res.status(401).json({
@@ -22,7 +26,7 @@ export class ExamController {
             message: 'Bạn cần đăng nhập để xem danh sách đề thi',
           });
         }
-        const result = await examService.findAllPaginated(page, limit, userId);
+        const result = await examService.findAllPaginated(page, limit, userId, filters);
         res.json({
           success: true,
           message: 'Lấy danh sách đề thi thành công',

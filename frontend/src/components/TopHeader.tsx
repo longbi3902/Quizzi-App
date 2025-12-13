@@ -37,7 +37,11 @@ const TopHeader: React.FC = () => {
   };
 
   const goToAccount = () => {
-    navigate('/home');
+    if (isTeacher) {
+      navigate('/teacher/profile');
+    } else {
+      navigate('/profile');
+    }
     handleCloseMenu();
   };
 

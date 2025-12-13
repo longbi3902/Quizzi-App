@@ -20,7 +20,6 @@ import {
   CircularProgress,
   Chip,
 } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { API_ENDPOINTS } from '../constants/api';
 import { ExamCode } from '../types/exam.types';
@@ -60,13 +59,10 @@ const ExamCodeList: React.FC = () => {
   }, [examId]);
 
   return (
-    <Container maxWidth="lg">
-      <Box sx={{ mt: 4, mb: 4 }}>
+    <Container maxWidth={false}>
+      <Box>
         <Paper elevation={3} sx={{ padding: 4 }}>
           <Box display="flex" alignItems="center" gap={2} mb={3}>
-            <IconButton onClick={() => navigate('/teacher/exams')}>
-              <ArrowBackIcon />
-            </IconButton>
             <Typography variant="h4" component="h1" sx={{ color: '#6366f1', fontWeight: 'bold' }}>
               Danh sách mã đề
             </Typography>

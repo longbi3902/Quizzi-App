@@ -11,7 +11,7 @@ export interface CorrectAnswer {
 export interface ExamResult {
   id: number;
   userId: number;
-  examRoomId: number;
+  classId: number | null; // ID lớp học
   examCodeId: number | null;
   examCode: string | null;
   examId: number;
@@ -41,7 +41,7 @@ export interface ExamQuestionForTaking {
 }
 
 export interface StartExamResponse {
-  examRoomId: number;
+  classId: number;
   examId: number;
   examCodeId: number | null;
   examCode: string | null;
@@ -52,7 +52,8 @@ export interface StartExamResponse {
 }
 
 export interface SubmitExamDTO {
-  examRoomId: number;
+  classId: number;
+  examId: number;
   examCodeId: number | null;
   answers: StudentAnswer[];
 }

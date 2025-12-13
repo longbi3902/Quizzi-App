@@ -20,47 +20,76 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import { ExamResult as ExamResultType, CorrectAnswer, StudentAnswer, ExamQuestionForTaking } from '../types/examResult.types';
-import { ExamRoomWithExam } from '../types/examRoom.types';
+import { ClassWithExams } from '../types/class.types';
 import { API_ENDPOINTS } from '../constants/api';
 import apiClient from '../utils/apiClient';
 
 const ExamResult: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const examRoomId = location.state?.examRoomId;
+  const classId = location.state?.classId;
+  const examId = location.state?.examId;
   
   const [examResult, setExamResult] = useState<ExamResultType | null>(null);
-  const [examRoom, setExamRoom] = useState<ExamRoomWithExam | null>(null);
+  const [classData, setClassData] = useState<ClassWithExams | null>(null);
   const [loading, setLoading] = useState(true);
   const [canViewCorrectAnswers, setCanViewCorrectAnswers] = useState(false);
   const [questions, setQuestions] = useState<ExamQuestionForTaking[]>([]);
 
   useEffect(() => {
-    if (!examRoomId) {
-      // Nếu không có examRoomId từ state, thử lấy từ localStorage
-      const roomData = localStorage.getItem('currentExamRoom');
-      if (roomData) {
+    // Lấy classId và examId từ state hoặc localStorage
+    let finalClassId = classId;
+    let finalExamId = examId;
+    
+    if (!finalClassId || !finalExamId) {
+      // Thử lấy từ localStorage
+      const classDataStr = localStorage.getItem('currentClass');
+      const examDataStr = localStorage.getItem('currentExam');
+      
+      if (classDataStr && examDataStr) {
         try {
-          const room: ExamRoomWithExam = JSON.parse(roomData);
-          loadExamResult(room.id);
+          const classInfo = JSON.parse(classDataStr);
+          const examInfo = JSON.parse(examDataStr);
+          finalClassId = classInfo.id;
+          finalExamId = examInfo.examId || examInfo.id;
         } catch (error) {
-          console.error('Error parsing exam room data:', error);
+          console.error('Error parsing data:', error);
           navigate('/home');
+          return;
+        }
+      } else if (classDataStr) {
+        try {
+          const classInfo = JSON.parse(classDataStr);
+          finalClassId = classInfo.id;
+          // Nếu có examId trong location state
+          if (examId) {
+            finalExamId = examId;
+          } else {
+            navigate('/home');
+            return;
+          }
+        } catch (error) {
+          console.error('Error parsing class data:', error);
+          navigate('/home');
+          return;
         }
       } else {
         navigate('/home');
+        return;
       }
-    } else {
-      loadExamResult(examRoomId);
     }
-  }, [examRoomId, navigate]);
+    
+    if (finalClassId && finalExamId) {
+      loadExamResultByClassAndExam(finalClassId, finalExamId);
+    }
+  }, [classId, examId, navigate]);
 
-  const loadExamResult = async (roomId: number) => {
+  const loadExamResultByClassAndExam = async (classId: number, examId: number) => {
     try {
       setLoading(true);
       
       // Lấy kết quả bài thi
-      const resultResponse = await apiClient.get(API_ENDPOINTS.EXAM_RESULTS_BY_ROOM(roomId));
+      const resultResponse = await apiClient.get(API_ENDPOINTS.EXAM_RESULTS_BY_CLASS_EXAM(classId, examId));
       const resultData = await resultResponse.json();
 
       if (resultResponse.ok && resultData.success && resultData.data) {
@@ -70,22 +99,24 @@ const ExamResult: React.FC = () => {
         return;
       }
 
-      // Lấy thông tin phòng thi
-      const roomData = localStorage.getItem('currentExamRoom');
-      if (roomData) {
+      // Lấy thông tin lớp học
+      const classDataStr = localStorage.getItem('currentClass');
+      if (classDataStr) {
         try {
-          const room: ExamRoomWithExam = JSON.parse(roomData);
-          setExamRoom(room);
+          const classInfo: ClassWithExams = JSON.parse(classDataStr);
+          setClassData(classInfo);
           
-          // Kiểm tra xem đã hết thời gian thi chưa
-          const now = new Date();
-          const endDate = new Date(room.endDate);
-          setCanViewCorrectAnswers(now > endDate);
+          // Lấy đề thi từ danh sách đề thi trong lớp
+          const exam = classInfo.exams?.find((e: any) => e.id === examId);
           
-          // Lấy lại câu hỏi theo thứ tự (nếu có mã đề thì cần lấy lại từ API)
-          // Tạm thời dùng câu hỏi từ examRoom.exam
-          if (room.exam) {
-            const questionsList: ExamQuestionForTaking[] = room.exam.questions.map((eq) => {
+          // Kiểm tra xem đã hết thời gian thi chưa (lấy từ exam)
+          if (exam && exam.endDate) {
+            const now = new Date();
+            const endDate = new Date(exam.endDate);
+            setCanViewCorrectAnswers(now > endDate);
+          }
+          if (exam) {
+            const questionsList: ExamQuestionForTaking[] = exam.questions.map((eq: any) => {
               if (!eq.question) {
                 return {
                   id: eq.id,
@@ -100,24 +131,23 @@ const ExamResult: React.FC = () => {
                   },
                 };
               }
-
-              // Xác định type dựa trên số lượng đáp án đúng
-              const correctAnswersCount = eq.question.answers.filter((a) => a.isTrue).length;
+              
+              const correctAnswersCount = eq.question.answers.filter((a: any) => a.isTrue).length;
               const questionType = correctAnswersCount > 1 ? 'multiple' : 'single';
-
+              
               return {
                 id: eq.id,
-                questionId: eq.questionId,
+                questionId: eq.question.id,
                 score: eq.score,
                 orderIndex: eq.orderIndex,
                 question: {
                   id: eq.question.id,
                   content: eq.question.content,
                   type: questionType,
-                  answers: eq.question.answers.map((answer) => ({
+                  answers: eq.question.answers.map((answer: any) => ({
                     id: answer.id,
                     content: answer.content,
-                    isCorrect: answer.isTrue,
+                    isCorrect: canViewCorrectAnswers ? answer.isTrue : false,
                   })),
                 },
               };
@@ -125,16 +155,17 @@ const ExamResult: React.FC = () => {
             setQuestions(questionsList);
           }
         } catch (error) {
-          console.error('Error parsing exam room data:', error);
+          console.error('Error parsing class data:', error);
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error loading exam result:', error);
       navigate('/home');
     } finally {
       setLoading(false);
     }
   };
+
 
   const isAnswerCorrect = (questionId: number, studentAnswers: number[]): boolean => {
     if (!examResult?.correctAnswers || !canViewCorrectAnswers) {
@@ -176,11 +207,25 @@ const ExamResult: React.FC = () => {
     );
   }
 
-  if (!examResult || !examRoom || !examRoom.exam) {
+  if (!examResult || !classData) {
     return (
       <Container maxWidth="lg">
         <Box sx={{ mt: 4, mb: 4 }}>
           <Alert severity="error">Không tìm thấy kết quả bài thi</Alert>
+          <Button variant="contained" onClick={() => navigate('/home')} sx={{ mt: 2 }}>
+            Về trang chủ
+          </Button>
+        </Box>
+      </Container>
+    );
+  }
+
+  const exam = classData.exams?.find(e => e.id === examId);
+  if (!exam) {
+    return (
+      <Container maxWidth="lg">
+        <Box sx={{ mt: 4, mb: 4 }}>
+          <Alert severity="error">Không tìm thấy đề thi</Alert>
           <Button variant="contained" onClick={() => navigate('/home')} sx={{ mt: 2 }}>
             Về trang chủ
           </Button>
@@ -205,7 +250,7 @@ const ExamResult: React.FC = () => {
           {/* Thông tin tổng quan */}
           <Box sx={{ mb: 4, p: 3, bgcolor: 'background.default', borderRadius: 2 }}>
             <Typography variant="h5" gutterBottom>
-              {examRoom.exam.name}
+              {exam.name}
             </Typography>
             <Typography variant="h3" color="primary" gutterBottom>
               Điểm: {examResult.score} / {examResult.maxScore}

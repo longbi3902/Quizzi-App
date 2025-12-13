@@ -24,6 +24,11 @@ import {
 } from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
 
+/**
+ * Xử lý khi user submit form đăng nhập
+ * @param e - Event object từ form submit
+ */
+
 const Login: React.FC = () => {
   // useNavigate: Hook từ react-router-dom để điều hướng (chuyển trang)
   const navigate = useNavigate();
@@ -55,10 +60,14 @@ const Login: React.FC = () => {
     try {
       // Gọi hàm login từ AuthContext
       // async/await: Đợi kết quả trả về trước khi tiếp tục
-      await login(email, password);
+      const loggedInUser = await login(email, password);
       
-      // Nếu đăng nhập thành công, chuyển đến trang Home
-      navigate('/home');
+      // Nếu đăng nhập thành công, chuyển đến trang phù hợp dựa trên role
+      if (loggedInUser?.role === 'teacher') {
+        navigate('/teacher/dashboard');
+      } else {
+        navigate('/home');
+      }
     } catch (err: any) {
       // Nếu có lỗi, hiển thị thông báo lỗi
       setError(err.message || 'Đăng nhập thất bại');

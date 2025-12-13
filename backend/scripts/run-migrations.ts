@@ -95,6 +95,38 @@ async function executeMigration(filePath: string, migrationName: string): Promis
         await query(statement);
         console.log(`   ✓ Thực thi: ${statement.substring(0, 50)}...`);
       } catch (error: any) {
+        // Bỏ qua lỗi nếu đang cố DROP một index/foreign key không tồn tại
+        // (Đây là trường hợp an toàn, vì mục tiêu là xóa nếu có)
+        const isDropError = 
+          (error.code === 'ER_CANT_DROP_FIELD_OR_KEY' || 
+           error.code === 'ER_DROP_INDEX_FK' ||
+           error.errno === 1091 || // Key doesn't exist
+           error.errno === 1553 || // Foreign key doesn't exist
+           error.message?.includes("doesn't exist") ||
+           error.message?.includes("Unknown key"));
+        
+        if (isDropError && (
+          statement.toUpperCase().includes('DROP INDEX') ||
+          statement.toUpperCase().includes('DROP FOREIGN KEY')
+        )) {
+          console.log(`   ⚠ Bỏ qua (đã xóa hoặc không tồn tại): ${statement.substring(0, 50)}...`);
+          continue;
+        }
+
+        // Bỏ qua lỗi nếu bảng exam_rooms không tồn tại (các migration cũ)
+        const isExamRoomsError = 
+          (error.code === 'ER_BAD_FIELD_ERROR' || 
+           error.code === 'ER_NO_SUCH_TABLE' ||
+           error.errno === 1054 || // Unknown column
+           error.errno === 1146) && // Table doesn't exist
+          (statement.toUpperCase().includes('EXAM_ROOMS') ||
+           statement.toUpperCase().includes('EXAM_ROOM'));
+        
+        if (isExamRoomsError) {
+          console.log(`   ⚠ Bỏ qua (bảng exam_rooms không còn tồn tại): ${statement.substring(0, 50)}...`);
+          continue;
+        }
+        
         console.error(`   ✗ Lỗi khi thực thi: ${statement.substring(0, 50)}...`);
         console.error(`   Chi tiết: ${error.message}`);
         throw error;

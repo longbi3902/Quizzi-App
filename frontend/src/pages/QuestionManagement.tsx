@@ -34,11 +34,15 @@ import {
   Grid,
   Pagination,
   Stack,
+  TextField,
+  MenuItem,
+  Select,
+  FormControl,
+  InputLabel,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
@@ -62,6 +66,12 @@ const QuestionManagement: React.FC = () => {
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [subjects, setSubjects] = useState<Subject[]>([]);
+  
+  // Filter states
+  const [contentFilter, setContentFilter] = useState<string>('');
+  const [subjectFilter, setSubjectFilter] = useState<number | ''>('');
+  const [gradeFilter, setGradeFilter] = useState<number | ''>('');
+  const [difficultyFilter, setDifficultyFilter] = useState<number | ''>('');
 
   /**
    * Lấy danh sách câu hỏi từ API
@@ -73,6 +83,20 @@ const QuestionManagement: React.FC = () => {
       const params = new URLSearchParams();
       params.append('page', page.toString());
       params.append('limit', limit.toString());
+      
+      // Thêm filters
+      if (contentFilter.trim()) {
+        params.append('content', contentFilter.trim());
+      }
+      if (subjectFilter !== '') {
+        params.append('subjectId', subjectFilter.toString());
+      }
+      if (gradeFilter !== '') {
+        params.append('grade', gradeFilter.toString());
+      }
+      if (difficultyFilter !== '') {
+        params.append('difficulty', difficultyFilter.toString());
+      }
       
       const response = await apiClient.get(`${API_ENDPOINTS.QUESTIONS}?${params.toString()}`);
       const data = await response.json();
@@ -138,10 +162,15 @@ const QuestionManagement: React.FC = () => {
     setDeleteDialogOpen(true);
   };
 
-  // Load danh sách câu hỏi khi component mount
+  // Load danh sách câu hỏi khi component mount hoặc filters thay đổi
+  useEffect(() => {
+    setPage(1); // Reset về trang 1 khi filter thay đổi
+  }, [contentFilter, subjectFilter, gradeFilter, difficultyFilter]);
+
   useEffect(() => {
     fetchQuestions();
-  }, [page]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, contentFilter, subjectFilter, gradeFilter, difficultyFilter]);
 
   useEffect(() => {
     const fetchSubjects = async () => {
@@ -159,19 +188,14 @@ const QuestionManagement: React.FC = () => {
   }, []);
 
   return (
-    <Container maxWidth="lg">
-      <Box sx={{ mt: 4, mb: 4 }}>
+    <Container maxWidth={false}>
+      <Box>
         <Paper elevation={3} sx={{ padding: 4 }}>
           {/* Header */}
           <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-            <Box display="flex" alignItems="center" gap={2}>
-              <IconButton onClick={() => navigate('/teacher/dashboard')}>
-                <ArrowBackIcon />
-              </IconButton>
-              <Typography variant="h4" component="h1" sx={{ color: '#6366f1', fontWeight: 'bold' }}>
-                Quản lý câu hỏi
-              </Typography>
-            </Box>
+            <Typography variant="h4" component="h1" sx={{ color: '#6366f1', fontWeight: 'bold' }}>
+              Quản lý câu hỏi
+            </Typography>
             <Button
               variant="contained"
               startIcon={<AddIcon />}
@@ -187,6 +211,87 @@ const QuestionManagement: React.FC = () => {
               {error}
             </Alert>
           )}
+
+          {/* Filter Section */}
+          <Box sx={{ mb: 3 }}>
+            <Grid container spacing={2} alignItems="center">
+              <Grid item xs={12} sm={6} md={2.4}>
+                <TextField
+                  size="small"
+                  label="Nội dung câu hỏi"
+                  value={contentFilter}
+                  onChange={(e) => setContentFilter(e.target.value)}
+                  placeholder="Nhập nội dung..."
+                  sx={{ width: '100%', '& .MuiInputBase-root': { height: '40px' } }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6} md={2.4}>
+                <FormControl size="small" sx={{ width: '100%', '& .MuiInputBase-root': { height: '40px' } }}>
+                  <InputLabel>Môn học</InputLabel>
+                  <Select
+                    value={subjectFilter}
+                    label="Môn học"
+                    onChange={(e) => setSubjectFilter(e.target.value as number | '')}
+                  >
+                    <MenuItem value="">Tất cả</MenuItem>
+                    {subjects.map((subject) => (
+                      <MenuItem key={subject.id} value={subject.id}>
+                        {subject.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} sm={6} md={2.4}>
+                <FormControl size="small" sx={{ width: '100%', '& .MuiInputBase-root': { height: '40px' } }}>
+                  <InputLabel>Khối</InputLabel>
+                  <Select
+                    value={gradeFilter}
+                    label="Khối"
+                    onChange={(e) => setGradeFilter(e.target.value as number | '')}
+                  >
+                    <MenuItem value="">Tất cả</MenuItem>
+                    {Array.from({ length: 12 }, (_, i) => i + 1).map((grade) => (
+                      <MenuItem key={grade} value={grade}>
+                        Khối {grade}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} sm={6} md={2.4}>
+                <FormControl size="small" sx={{ width: '100%', '& .MuiInputBase-root': { height: '40px' } }}>
+                  <InputLabel>Độ khó</InputLabel>
+                  <Select
+                    value={difficultyFilter}
+                    label="Độ khó"
+                    onChange={(e) => setDifficultyFilter(e.target.value as number | '')}
+                  >
+                    <MenuItem value="">Tất cả</MenuItem>
+                    <MenuItem value={1}>Nhận biết</MenuItem>
+                    <MenuItem value={2}>Thông hiểu</MenuItem>
+                    <MenuItem value={3}>Vận dụng</MenuItem>
+                    <MenuItem value={4}>Vận dụng cao</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} sm={6} md={2.4}>
+                <Button
+                  fullWidth
+                  variant="outlined"
+                  onClick={() => {
+                    setContentFilter('');
+                    setSubjectFilter('');
+                    setGradeFilter('');
+                    setDifficultyFilter('');
+                  }}
+                  sx={{ height: '40px' }}
+                >
+                  Xóa bộ lọc
+                </Button>
+              </Grid>
+            </Grid>
+          </Box>
 
           {/* Loading */}
           {loading ? (

@@ -1,181 +1,409 @@
 /**
- * TeacherDashboard - Dashboard dành cho giáo viên
- * 
- * Component này hiển thị:
- * - Menu điều hướng các chức năng
- * - Quản lý câu hỏi
- * - Các tính năng khác (sẽ phát triển sau)
+ * TeacherDashboard - Trang dashboard cho giáo viên
  */
 
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import {
-  Container,
-  Paper,
-  Typography,
-  Box,
-  Button,
-  Grid,
-  Card,
-  CardContent,
-  CardActions,
-} from '@mui/material';
-import QuizIcon from '@mui/icons-material/Quiz';
-import ListIcon from '@mui/icons-material/List';
-import MeetingRoomIcon from '@mui/icons-material/MeetingRoom';
-import { useAuth } from '../contexts/AuthContext';
+import React from 'react';
+import { Box } from '@mui/material';
 
 const TeacherDashboard: React.FC = () => {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
-
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
-
   return (
-    <Container maxWidth="lg">
-      <Box sx={{ mt: 4, mb: 4 }}>
-        <Paper elevation={3} sx={{ padding: 4 }}>
-          {/* Header */}
-          <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
-            <Typography variant="h4" component="h1" sx={{ color: '#6366f1', fontWeight: 'bold', letterSpacing: '0.5px' }}>
-              Dashboard Giáo Viên
-            </Typography>
-            <Button variant="outlined" color="error" onClick={handleLogout}>
-              Đăng Xuất
-            </Button>
+    <Box
+      component="section"
+      sx={{
+        position: 'relative',
+        overflow: 'hidden',
+        py: { xs: 6, md: 15, lg: 5 },
+      }}
+    >
+      <Box
+        sx={{
+          maxWidth: { lg: '1194px', xl: '1440px' },
+          px: { xs: 2, md: 3, xl: 15 },
+          mx: 'auto',
+        }}
+      >
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: {
+              xs: 'repeat(1, minmax(0, 1fr))',
+              md: 'repeat(8, minmax(0, 1fr))',
+              lg: 'repeat(12, minmax(0, 1fr))',
+            },
+            gap: { xs: 2, lg: 3 },
+            rowGap: { xs: 2, lg: 3 },
+          }}
+        >
+          {/* Left Column - 2 cards */}
+          <Box
+            sx={{
+              gridColumn: { xs: 'span 1', md: 'span 2', lg: 'span 3' },
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 2,
+            }}
+          >
+            {/* Card 1: Triết lý giáo dục */}
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 2,
+                flexDirection: 'column',
+                p: 3,
+              }}
+            >
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: 96,
+                  height: 96,
+                }}
+              >
+                <Box
+                  component="img"
+                  alt="Triết lý giáo dục"
+                  loading="lazy"
+                  src="https://tn-cdn.trangnguyen.edu.vn/assets/about-illus-1-v-BP418v5k.svg"
+                  sx={{
+                    objectFit: 'cover',
+                    width: '100%',
+                    height: '100%',
+                  }}
+                />
+              </Box>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                  flexDirection: 'column',
+                }}
+              >
+                <Box
+                  component="h3"
+                  sx={{
+                    fontSize: { xs: '1.25rem', md: '1.5rem' },
+                    fontWeight: 600,
+                    textAlign: 'center',
+                    color: 'rgba(0, 0, 0, 0.87)',
+                    m: 0,
+                  }}
+                >
+                  Triết lý giáo dục
+                </Box>
+                <Box
+                  component="p"
+                  sx={{
+                    fontSize: '0.875rem',
+                    textAlign: 'center',
+                    color: 'rgba(0, 0, 0, 0.6)',
+                    m: 0,
+                  }}
+                >
+                  Dân tộc - Nhân văn - Sáng tạo - Khai phóng
+                </Box>
+              </Box>
+            </Box>
+
+            {/* Card 2: Sứ mệnh */}
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 2,
+                flexDirection: 'column',
+                p: 3,
+              }}
+            >
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: 96,
+                  height: 96,
+                }}
+              >
+                <Box
+                  component="img"
+                  alt="Sứ mệnh"
+                  loading="lazy"
+                  src="data:image/svg+xml,%3csvg%20width='97'%20height='96'%20viewBox='0%200%2097%2096'%20fill='none'%20xmlns='http://www.w3.org/2000/svg'%3e%3cpath%20d='M20.4805%2014.5016C20.4805%2014.5016%2021.1648%2017.1919%2025.4209%2016.9482C28.6176%2016.7701%2030.2957%2017.6512%2031.1675%2019.601C31.1675%2019.601%2029.4801%2018.6824%2027.0989%2019.8822C24.9521%2020.9696%2024.8772%2022.8351%2020.4805%2022.5538V14.4922V14.5016Z'%20fill='%23DA3B3B'/%3e%3cpath%20d='M19.1406%2015.6562V78.0497C19.5344%2078.0497%2019.15%2078.0403%2019.15%2078.0497C19.15%2078.5653%2019.3094%2078.9965%2019.9937%2078.9965C20.6781%2078.9965%2021.2218%2078.5746%2021.2312%2078.0685L20.9312%2078.1059L20.8562%2015.6562H19.1406Z'%20fill='%23FDBC2D'/%3e%3cpath%20d='M19.9941%2016.8099C20.7448%2016.8099%2021.3534%2016.2937%2021.3534%2015.6569C21.3534%2015.0201%2020.7448%2014.5039%2019.9941%2014.5039C19.2434%2014.5039%2018.6348%2015.0201%2018.6348%2015.6569C18.6348%2016.2937%2019.2434%2016.8099%2019.9941%2016.8099Z'%20fill='%23DFA000'/%3e%3cpath%20d='M19.9941%2015.852C20.8225%2015.852%2021.494%2015.1637%2021.494%2014.3147C21.494%2013.4656%2020.8225%2012.7773%2019.9941%2012.7773C19.1657%2012.7773%2018.4941%2013.4656%2018.4941%2014.3147C18.4941%2015.1637%2019.1657%2015.852%2019.9941%2015.852Z'%20fill='%23FDBC2D'/%3e%3cpath%20d='M52.3438%207.60156C52.3438%207.60156%2052.9825%2010.1125%2056.9548%209.88507C59.9384%209.71884%2061.5046%2010.5413%2062.3183%2012.3611C62.3183%2012.3611%2060.7434%2011.5037%2058.521%2012.6235C56.5173%2013.6384%2056.4473%2015.3795%2052.3438%2015.117V7.60156Z'%20fill='%23DA3B3B'/%3e%3cpath%20d='M51.1016%208.67578V76.5337C51.469%2076.5337%2051.1103%2076.5249%2051.1103%2076.5337C51.1103%2077.0149%2051.2591%2077.4173%2051.8978%2077.4173C52.5365%2077.4173%2053.044%2077.0236%2053.0527%2076.5512L52.7727%2076.5862L52.7027%208.68453H51.1016V8.67578Z'%20fill='%23FDBC2D'/%3e%3cpath%20d='M30.3646%2028.7392C30.3646%2028.7392%2015.7353%2033.8662%2012.7254%2043.4639C8.12313%2058.1449%2022.7612%2072.9221%2022.7612%2072.9221C22.7612%2072.9221%2030.1547%2060.9533%2048.0214%2060.6909C48.0214%2060.6909%2031.7908%2052.8604%2030.3646%2028.7305V28.7392Z'%20fill='%23891C1E'/%3e%3cpath%20d='M70.3594%2013.0156C70.3594%2013.0156%2041.1882%2020.5311%2036.8046%2034.8446C29.6912%2058.0646%2052.7727%2073.918%2052.7727%2073.918C52.7727%2073.918%2058.4337%2058.0646%2086.0562%2052.2465C86.0562%2052.2465%2071.5406%2041.4501%2070.3682%2013.0156H70.3594Z'%20fill='%23B72026'/%3e%3cpath%20d='M51.8976%209.75384C52.5983%209.75384%2053.1663%209.27203%2053.1663%208.6777C53.1663%208.08337%2052.5983%207.60156%2051.8976%207.60156C51.1969%207.60156%2050.6289%208.08337%2050.6289%208.6777C50.6289%209.27203%2051.1969%209.75384%2051.8976%209.75384Z'%20fill='%23DFA000'/%3e%3cpath%20d='M51.898%208.8697C52.6711%208.8697%2053.2979%208.2273%2053.2979%207.43485C53.2979%206.6424%2052.6711%206%2051.898%206C51.1248%206%2050.498%206.6424%2050.498%207.43485C50.498%208.2273%2051.1248%208.8697%2051.898%208.8697Z'%20fill='%23FDBC2D'/%3e%3cpath%20d='M17.7994%2089.992H78.2243C78.6355%2089.992%2079.0205%2089.782%2079.248%2089.432L89.3801%2073.605C90.1063%2072.4676%2090.5%2071.1377%2090.5%2069.7904V67.5943C90.5%2066.9207%2089.9575%2066.3782%2089.2838%2066.3782H87.8751C87.4201%2066.3782%2087.0002%2066.6407%2086.7989%2067.0431C86.1777%2068.268%2084.6378%2070.8052%2082.2841%2071.5927C79.6417%2072.4763%2034.9749%2076.5359%2018.8144%2071.8464C15.4195%2070.8577%2013.4334%2067.3494%2014.1946%2063.9022L11.6222%2062.5724C11.071%2062.2836%2010.3973%2062.4586%2010.056%2062.9748C9.11108%2064.4009%207.33491%2067.2619%206.72243%2069.5016C5.69873%2073.2637%208.32361%2078.0232%2012.2347%2082.6953C14.5271%2085.4337%2016.0933%2088.1634%2016.732%2089.362C16.942%2089.7558%2017.3532%2090.0007%2017.7994%2090.0007V89.992Z'%20fill='%233754C5'/%3e%3cmask%20id='mask0_16108_70819'%20style='mask-type:luminance'%20maskUnits='userSpaceOnUse'%20x='6'%20y='62'%20width='85'%20height='28'%3e%3cpath%20d='M17.7994%2089.992H78.2243C78.6355%2089.992%2079.0205%2089.782%2079.248%2089.432L89.3801%2073.605C90.1063%2072.4676%2090.5%2071.1377%2090.5%2069.7904V67.5943C90.5%2066.9207%2089.9575%2066.3782%2089.2838%2066.3782H87.8751C87.4201%2066.3782%2087.0002%2066.6407%2086.7989%2067.0431C86.1777%2068.268%2084.6378%2070.8052%2082.2841%2071.5927C79.6417%2072.4763%2034.9749%2076.5359%2018.8144%2071.8464C15.4195%2070.8577%2013.4334%2067.3494%2014.1946%2063.9022L11.6222%2062.5724C11.071%2062.2836%2010.3973%2062.4586%2010.056%2062.9748C9.11108%2064.4009%207.33491%2067.2619%206.72243%2069.5016C5.69873%2073.2637%208.32361%2078.0232%2012.2347%2082.6953C14.5271%2085.4337%2016.0933%2088.1634%2016.732%2089.362C16.942%2089.7558%2017.3532%2090.0007%2017.7994%2090.0007V89.992Z'%20fill='white'/%3e%3c/mask%3e%3cg%20mask='url(%23mask0_16108_70819)'%3e%3cpath%20d='M97.7106%2081.0078H-0.705078V105.855H97.7106V81.0078Z'%20fill='%23536EE0'/%3e%3c/g%3e%3c/svg%3e"
+                  sx={{
+                    objectFit: 'cover',
+                    width: '100%',
+                    height: '100%',
+                  }}
+                />
+              </Box>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                  flexDirection: 'column',
+                }}
+              >
+                <Box
+                  component="h3"
+                  sx={{
+                    fontSize: { xs: '1.25rem', md: '1.5rem' },
+                    fontWeight: 600,
+                    textAlign: 'center',
+                    color: 'rgba(0, 0, 0, 0.87)',
+                    m: 0,
+                  }}
+                >
+                  Sứ mệnh
+                </Box>
+                <Box
+                  component="p"
+                  sx={{
+                    fontSize: '0.875rem',
+                    textAlign: 'center',
+                    color: 'rgba(0, 0, 0, 0.6)',
+                    m: 0,
+                  }}
+                >
+                  Đào tạo học sinh Việt Nam đẹp về nhân cách, làm chủ tri thức, sáng tạo đột phá, thấm nhuần bản sắc dân tộc
+                </Box>
+              </Box>
+            </Box>
           </Box>
 
-          {/* Thông tin giáo viên */}
-          <Card sx={{ mb: 4 }}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Chào mừng, {user?.name}!
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Email: {user?.email} | Trường: {user?.school}
-              </Typography>
-            </CardContent>
-          </Card>
-
-          {/* Menu chức năng */}
-          <Typography variant="h5" gutterBottom sx={{ mb: 3, fontWeight: 600 }}>
-            Quản lý
-          </Typography>
-
-          <Grid container spacing={3}>
-            {/* Quản lý câu hỏi */}
-            <Grid item xs={12} sm={6} md={4}>
-              <Card
+          {/* Center Column - Image with animation */}
+          <Box
+            sx={{
+              gridColumn: { xs: 'span 1', md: 'span 4', lg: 'span 6' },
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Box
+              sx={{
+                position: 'relative',
+                px: { xs: 3.75, md: 6.75 },
+                py: { xs: 3.25, md: 5.75 },
+                width: '100%',
+              }}
+            >
+              {/* Decorative cloud 1 */}
+              <Box
+                component="img"
+                alt="About featured cloud 1"
+                loading="lazy"
+                src="https://tn-cdn.trangnguyen.edu.vn/assets/about-featured-cloud-1-v-oElymP0Y.svg"
                 sx={{
-                  height: '100%',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  cursor: 'pointer',
-                  transition: 'transform 0.2s, box-shadow 0.2s',
-                  '&:hover': {
-                    transform: 'translateY(-4px)',
-                    boxShadow: 6,
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: { xs: 128, md: 226 },
+                  height: { xs: 64, md: 114 },
+                  objectFit: 'cover',
+                }}
+              />
+
+              {/* Decorative cloud 2 */}
+              <Box
+                component="img"
+                alt="About featured cloud 2"
+                loading="lazy"
+                src="data:image/svg+xml,%3csvg%20width='273'%20height='92'%20viewBox='0%200%20273%2092'%20fill='none'%20xmlns='http://www.w3.org/2000/svg'%3e%3cg%20clip-path='url(%23clip0_13453_140294)'%3e%3cpath%20d='M0.974609%2063.3802C0.974609%2063.3802%209.69768%2059.1669%2028.3185%2064.2361C44.5659%2068.6649%2050.319%2061.2676%2058.3372%2062.674C66.3494%2064.0805%2068.0423%2067.827%2078.6509%2067.2405C89.9644%2066.618%2092.1994%2061.9678%20101.633%2062.2072C123.363%2062.7518%20127.447%2083.633%20164.93%2080.2395C209.599%2076.1938%20181.111%2028.0098%20146.188%2033.5158C126.152%2036.6758%20127.682%2048.2685%20116.603%2049.5552C108.398%2050.5068%2096.9224%2042.1759%2086.0788%2050.1417C77.3738%2056.5336%2074.5303%2059.1609%2062.9759%2056.1146C51.4214%2053.0683%2044.4333%2062.9074%2034.5295%2061.9678C24.6317%2061.0282%2011.3483%2056.5814%200.974609%2063.3742L0.974609%2063.3802Z'%20fill='%23EFEFFF'/%3e%3cpath%20d='M174.629%2017.7865C174.629%2017.7865%20151.671%2023.1071%20151.056%2042.4561C150.586%2057.2866%20160.014%2063.846%20160.014%2063.846C160.014%2063.846%20162.683%2092.651%20207.003%2088.6711C207.003%2088.6711%20250.377%2099.1326%20261.926%2068.7655C261.926%2068.7655%20278.426%2054.9465%20269.938%2030.5941C262.185%208.33647%20238.112%209.51549%20238.112%209.51549C238.112%209.51549%20205.581%20-14.37%20174.623%2017.7925L174.629%2017.7865Z'%20fill='%23EFEFFF'/%3e%3cpath%20d='M167.666%2079.8785C167.521%2079.8785%20167.383%2079.8366%20167.256%2079.7528C158.708%2073.9176%20158.322%2066.5802%20158.394%2064.5333C156.123%2063.4501%20146.985%2058.2133%20147.936%2044.5918C148.183%2041.0488%20149.744%2035.9916%20152.569%2033.2685C152.858%2032.9932%20153.316%2032.9992%20153.593%2033.2864C153.87%2033.5737%20153.864%2034.0286%20153.575%2034.3039C151.021%2036.7636%20149.611%2041.4139%20149.382%2044.6936C148.376%2059.0572%20158.955%2063.2346%20159.407%2063.4082C159.72%2063.5279%20159.913%2063.8391%20159.87%2064.1683C159.87%2064.1862%20159.635%2066.239%20160.533%2069.028C161.358%2071.5955%20163.334%2075.33%20168.075%2078.5678C168.407%2078.7952%20168.491%2079.2441%20168.262%2079.5733C168.124%2079.7768%20167.895%2079.8845%20167.666%2079.8845V79.8785Z'%20fill='%23DDE1FF'/%3e%3cpath%20d='M209.551%2070.4465C202.147%2070.4465%20194.436%2068.9144%20187.382%2065.8322C178.641%2062.0079%20172.713%2055.2629%20170.243%2046.3276C166.984%2034.5314%20170.502%2022.2924%20174.038%2017.3729C174.273%2017.0497%20174.725%2016.9719%20175.051%2017.2053C175.376%2017.4387%20175.454%2017.8876%20175.219%2018.2108C171.846%2022.9029%20168.508%2034.6092%20171.641%2045.9505C173.99%2054.455%20179.635%2060.8767%20187.966%2064.5155C202.533%2070.8834%20219.925%2070.4585%20231.244%2063.4622C237.383%2059.6678%20240.907%2054.2755%20241.166%2048.2846C241.534%2039.8101%20239.708%2033.4601%20235.739%2029.4264C231.781%2025.3926%20225.672%2023.5014%20217.069%2023.6689C204.497%2023.8964%20196.732%2030.0488%20196.804%2039.7263C196.84%2044.7356%20199.449%2047.4587%20201.629%2048.8592C205.316%2051.2351%20210.702%2051.672%20214.726%2049.9185C217.19%2048.8472%20217.949%2045.8967%20217.262%2043.6583C216.997%2042.8085%20215.865%2040.0674%20212.256%2040.7317C211.859%2040.8036%20211.485%2040.5402%20211.413%2040.1512C211.34%2039.7562%20211.599%2039.3852%20211.997%2039.3133C215.13%2038.7448%20217.738%2040.2829%20218.648%2043.2394C219.509%2046.0343%20218.63%2049.7928%20215.304%2051.2411C210.858%2053.1742%20204.913%2052.6954%20200.834%2050.0681C198.352%2048.4701%20195.388%2045.382%20195.346%2039.7323C195.268%2029.3366%20203.786%2022.46%20217.039%2022.2206C226.064%2022.059%20232.516%2024.0819%20236.769%2028.4149C241.022%2032.748%20242.986%2039.451%20242.606%2048.3445C242.329%2054.8261%20238.558%2060.6314%20231.997%2064.6831C225.799%2068.5134%20217.859%2070.4465%20209.539%2070.4465H209.551Z'%20fill='%23DDE1FF'/%3e%3c/g%3e%3cdefs%3e%3cclipPath%20id='clip0_13453_140294'%3e%3crect%20width='271.89'%20height='90.06'%20fill='white'%20transform='translate(0.974609%200.980469)'/%3e%3c/clipPath%3e%3c/defs%3e%3c/svg%3e"
+                sx={{
+                  position: 'absolute',
+                  bottom: 0,
+                  right: 0,
+                  zIndex: 1,
+                  width: { xs: 272, md: 477 },
+                  height: { xs: 90, md: 158 },
+                  objectFit: 'cover',
+                }}
+              />
+
+              {/* Main rotating image */}
+              <Box
+                sx={{
+                  position: 'relative',
+                  width: '100%',
+                  maxWidth: '500px',
+                  aspectRatio: '1 / 1',
+                  margin: '0 auto',
+                  zIndex: 2,
+                  animation: 'spin 20s linear infinite',
+                  '@keyframes spin': {
+                    '0%': {
+                      transform: 'rotate(0deg)',
+                    },
+                    '100%': {
+                      transform: 'rotate(360deg)',
+                    },
                   },
                 }}
-                onClick={() => navigate('/teacher/questions')}
               >
-                <CardContent sx={{ flexGrow: 1 }}>
-                  <Box display="flex" alignItems="center" mb={2}>
-                    <QuizIcon sx={{ fontSize: 40, color: '#6366f1', mr: 2 }} />
-                    <Typography variant="h6" component="h2">
-                      Quản lý câu hỏi
-                    </Typography>
-                  </Box>
-                  <Typography variant="body2" color="text.secondary">
-                    Xem, thêm, sửa, xóa câu hỏi và đáp án
-                  </Typography>
-                </CardContent>
-                <CardActions>
-                  <Button size="small" onClick={() => navigate('/teacher/questions')}>
-                    Xem chi tiết
-                  </Button>
-                </CardActions>
-              </Card>
-            </Grid>
+                <Box
+                  component="img"
+                  alt="hero"
+                  loading="lazy"
+                  src="https://tn-cdn.trangnguyen.edu.vn/assets/hero-trongdong-v-DEPKCf4a.svg"
+                  sx={{
+                    width: '100%',
+                    height: '100%',
+                    backgroundColor: 'white',
+                    borderRadius: '50%',
+                    objectFit: 'cover',
+                  }}
+                />
+              </Box>
+            </Box>
+          </Box>
 
-            {/* Quản lý đề thi */}
-            <Grid item xs={12} sm={6} md={4}>
-              <Card
+          {/* Right Column - 2 cards */}
+          <Box
+            sx={{
+              gridColumn: { xs: 'span 1', md: 'span 2', lg: 'span 3' },
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 2,
+            }}
+          >
+            {/* Card 3: Tầm nhìn */}
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 2,
+                flexDirection: 'column',
+                p: 3,
+              }}
+            >
+              <Box
                 sx={{
-                  height: '100%',
                   display: 'flex',
-                  flexDirection: 'column',
-                  cursor: 'pointer',
-                  transition: 'transform 0.2s, box-shadow 0.2s',
-                  '&:hover': {
-                    transform: 'translateY(-4px)',
-                    boxShadow: 6,
-                  },
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: 96,
+                  height: 96,
                 }}
-                onClick={() => navigate('/teacher/exams')}
               >
-                <CardContent sx={{ flexGrow: 1 }}>
-                  <Box display="flex" alignItems="center" mb={2}>
-                    <ListIcon sx={{ fontSize: 40, color: '#ff9800', mr: 2 }} />
-                    <Typography variant="h6" component="h2">
-                      Quản lý đề thi
-                    </Typography>
-                  </Box>
-                  <Typography variant="body2" color="text.secondary">
-                    Tạo và quản lý đề thi, tự chọn hoặc random câu hỏi
-                  </Typography>
-                </CardContent>
-                <CardActions>
-                  <Button size="small" onClick={() => navigate('/teacher/exams')}>
-                    Xem chi tiết
-                  </Button>
-                </CardActions>
-              </Card>
-            </Grid>
+                <Box
+                  component="img"
+                  alt="Tầm nhìn"
+                  loading="lazy"
+                  src="https://tn-cdn.trangnguyen.edu.vn/assets/about-illus-3-v-BhbGgWvv.svg"
+                  sx={{
+                    objectFit: 'cover',
+                    width: '100%',
+                    height: '100%',
+                  }}
+                />
+              </Box>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                  flexDirection: 'column',
+                }}
+              >
+                <Box
+                  component="h3"
+                  sx={{
+                    fontSize: { xs: '1.25rem', md: '1.5rem' },
+                    fontWeight: 600,
+                    textAlign: 'center',
+                    color: 'rgba(0, 0, 0, 0.87)',
+                    m: 0,
+                  }}
+                >
+                  Tầm nhìn
+                </Box>
+                <Box
+                  component="p"
+                  sx={{
+                    fontSize: '0.875rem',
+                    textAlign: 'center',
+                    color: 'rgba(0, 0, 0, 0.6)',
+                    m: 0,
+                  }}
+                >
+                  Trở thành tổ chức giáo dục trực tuyến số 1 Việt Nam, không ngừng mở rộng hệ sinh thái giáo dục tinh hoa
+                </Box>
+              </Box>
+            </Box>
 
-            {/* Quản lý phòng thi */}
-            <Grid item xs={12} sm={6} md={4}>
-              <Card
+            {/* Card 4: Giá trị cốt lõi */}
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 2,
+                flexDirection: 'column',
+                p: 3,
+              }}
+            >
+              <Box
                 sx={{
-                  height: '100%',
                   display: 'flex',
-                  flexDirection: 'column',
-                  cursor: 'pointer',
-                  transition: 'transform 0.2s, box-shadow 0.2s',
-                  '&:hover': {
-                    transform: 'translateY(-4px)',
-                    boxShadow: 6,
-                  },
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: 96,
+                  height: 96,
                 }}
-                onClick={() => navigate('/teacher/exam-rooms')}
               >
-                <CardContent sx={{ flexGrow: 1 }}>
-                  <Box display="flex" alignItems="center" mb={2}>
-                    <MeetingRoomIcon sx={{ fontSize: 40, color: '#9c27b0', mr: 2 }} />
-                    <Typography variant="h6" component="h2">
-                      Quản lý phòng thi
-                    </Typography>
-                  </Box>
-                  <Typography variant="body2" color="text.secondary">
-                    Tạo và quản lý phòng thi, gán đề thi cho phòng thi
-                  </Typography>
-                </CardContent>
-                <CardActions>
-                  <Button size="small" onClick={() => navigate('/teacher/exam-rooms')}>
-                    Xem chi tiết
-                  </Button>
-                </CardActions>
-              </Card>
-            </Grid>
-          </Grid>
-        </Paper>
+                <Box
+                  component="img"
+                  alt="Giá trị cốt lõi"
+                  loading="lazy"
+                  src="https://tn-cdn.trangnguyen.edu.vn/assets/about-illus-4-v-O2S_WN2n.svg"
+                  sx={{
+                    objectFit: 'cover',
+                    width: '100%',
+                    height: '100%',
+                  }}
+                />
+              </Box>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                  flexDirection: 'column',
+                }}
+              >
+                <Box
+                  component="h3"
+                  sx={{
+                    fontSize: { xs: '1.25rem', md: '1.5rem' },
+                    fontWeight: 600,
+                    textAlign: 'center',
+                    color: 'rgba(0, 0, 0, 0.87)',
+                    m: 0,
+                  }}
+                >
+                  Giá trị cốt lõi
+                </Box>
+                <Box
+                  component="p"
+                  sx={{
+                    fontSize: '0.875rem',
+                    textAlign: 'center',
+                    color: 'rgba(0, 0, 0, 0.6)',
+                    m: 0,
+                  }}
+                >
+                  Sáng tâm trí Đổi tư duy Tạo giá trị
+                </Box>
+              </Box>
+            </Box>
+          </Box>
+        </Box>
       </Box>
-    </Container>
+    </Box>
   );
 };
 
 export default TeacherDashboard;
-
