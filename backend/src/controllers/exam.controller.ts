@@ -103,6 +103,54 @@ export class ExamController {
   }
 
   /**
+   * Lấy trạng thái đề thi (có mã đề chưa, có học sinh làm bài chưa)
+   */
+  async getExamStatus(req: Request, res: Response) {
+    try {
+      const id = Number.parseInt(req.params.id, 10);
+
+      if (isNaN(id)) {
+        return res.status(400).json({
+          success: false,
+          message: 'ID đề thi không hợp lệ',
+        });
+      }
+
+      const userId = getUserIdFromToken(req);
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          message: 'Bạn cần đăng nhập để xem trạng thái đề thi',
+        });
+      }
+
+      // Kiểm tra quyền sở hữu
+      const exam = await examService.findById(id, userId);
+      if (!exam) {
+        return res.status(404).json({
+          success: false,
+          message: 'Không tìm thấy đề thi hoặc bạn không có quyền xem',
+        });
+      }
+
+      const status = await examService.getExamStatus(id);
+
+      res.json({
+        success: true,
+        message: 'Lấy trạng thái đề thi thành công',
+        data: status,
+      });
+    } catch (error: any) {
+      console.error('Get exam status error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Lỗi server khi lấy trạng thái đề thi',
+        error: error.message,
+      });
+    }
+  }
+
+  /**
    * Tạo đề thi tự chọn
    */
   async createExam(req: Request, res: Response) {

@@ -47,6 +47,7 @@ const EditExam: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
   const [error, setError] = useState('');
+  const [examStatus, setExamStatus] = useState<{ hasExamCodes: boolean; hasExamResults: boolean } | null>(null);
 
   // Load dữ liệu đề thi
   useEffect(() => {
@@ -84,6 +85,18 @@ const EditExam: React.FC = () => {
         const questionsData = await questionsResponse.json();
         if (questionsResponse.ok && questionsData.success) {
           setAvailableQuestions(questionsData.data || []);
+        }
+
+        // Load trạng thái đề thi
+        try {
+          const statusResponse = await apiClient.get(`${API_ENDPOINTS.EXAMS}/${examId}/status`);
+          const statusData = await statusResponse.json();
+          if (statusResponse.ok && statusData.success) {
+            setExamStatus(statusData.data);
+          }
+        } catch (statusErr) {
+          console.error('Error loading exam status:', statusErr);
+          // Không bắt buộc, nên không throw error
         }
       } catch (err: any) {
         setError(err.message || 'Không thể tải dữ liệu đề thi');
@@ -206,6 +219,27 @@ const EditExam: React.FC = () => {
             </Alert>
           )}
 
+          {/* Cảnh báo về trạng thái đề thi */}
+          {examStatus?.hasExamResults && (
+            <Alert severity="warning" sx={{ mb: 3 }}>
+              <Typography variant="body2" fontWeight="bold" gutterBottom>
+                Cảnh báo: Đề thi này đã có học sinh làm bài
+              </Typography>
+              <Typography variant="body2">
+                Bạn không thể thêm hoặc xóa câu hỏi để đảm bảo tính nhất quán của kết quả. 
+                Bạn chỉ có thể sửa tên, thời gian và điểm số của đề thi.
+              </Typography>
+            </Alert>
+          )}
+
+          {examStatus?.hasExamCodes && !examStatus?.hasExamResults && (
+            <Alert severity="info" sx={{ mb: 3 }}>
+              <Typography variant="body2">
+                Đề thi này đã có mã đề. Nếu bạn thêm hoặc xóa câu hỏi, tất cả mã đề sẽ bị xóa và cần tạo lại.
+              </Typography>
+            </Alert>
+          )}
+
           {/* Form thông tin đề thi */}
           <Box sx={{ mb: 3 }}>
             <TextField
@@ -290,6 +324,8 @@ const EditExam: React.FC = () => {
                             size="small"
                             color="error"
                             onClick={() => handleRemoveQuestion(eq.question.id)}
+                            disabled={examStatus?.hasExamResults === true}
+                            title={examStatus?.hasExamResults ? 'Không thể xóa câu hỏi khi đã có học sinh làm bài' : 'Xóa câu hỏi'}
                           >
                             <DeleteIcon />
                           </IconButton>
@@ -347,6 +383,8 @@ const EditExam: React.FC = () => {
                             variant="outlined"
                             startIcon={<AddIcon />}
                             onClick={() => handleAddQuestion(q)}
+                            disabled={examStatus?.hasExamResults === true}
+                            title={examStatus?.hasExamResults ? 'Không thể thêm câu hỏi khi đã có học sinh làm bài' : 'Thêm câu hỏi'}
                           >
                             Thêm
                           </Button>

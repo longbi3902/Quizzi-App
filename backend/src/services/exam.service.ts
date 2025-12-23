@@ -11,6 +11,7 @@ import {
 import { QuestionDifficulty } from '../types/question.types';
 import { query } from '../config/database';
 import questionService from './question.service';
+import examCodeService from './examCode.service';
 
 interface ExamRow {
   id: number;
@@ -479,6 +480,49 @@ export class ExamService {
   }
 
   /**
+   * Kiểm tra xem đề thi đã có học sinh làm bài chưa
+   */
+  private async hasExamResults(examId: number): Promise<boolean> {
+    try {
+      const results = await query<{ count: number }[]>(
+        'SELECT COUNT(*) as count FROM exam_results WHERE exam_id = ?',
+        [examId]
+      );
+      return (results[0]?.count || 0) > 0;
+    } catch (error) {
+      console.error('Error checking exam results:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Kiểm tra xem đề thi đã có mã đề chưa
+   */
+  private async hasExamCodes(examId: number): Promise<boolean> {
+    try {
+      const examCodes = await examCodeService.findByExamId(examId);
+      return examCodes.length > 0;
+    } catch (error) {
+      console.error('Error checking exam codes:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Lấy thông tin trạng thái đề thi (có mã đề chưa, có học sinh làm bài chưa)
+   */
+  async getExamStatus(examId: number): Promise<{ hasExamCodes: boolean; hasExamResults: boolean }> {
+    try {
+      const hasCodes = await this.hasExamCodes(examId);
+      const hasResults = await this.hasExamResults(examId);
+      return { hasExamCodes: hasCodes, hasExamResults: hasResults };
+    } catch (error) {
+      console.error('Error getting exam status:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Cập nhật đề thi kèm câu hỏi
    */
   async updateWithQuestions(
@@ -503,6 +547,14 @@ export class ExamService {
 
       // Nếu có cập nhật câu hỏi
       if (examData.questions !== undefined) {
+        // Kiểm tra xem đã có học sinh làm bài chưa
+        const hasResults = await this.hasExamResults(id);
+        if (hasResults) {
+          throw new Error(
+            'Đề thi này đã có học sinh làm bài. Không thể thêm hoặc xóa câu hỏi để đảm bảo tính nhất quán của kết quả. Bạn chỉ có thể sửa tên, thời gian và điểm số của đề thi.'
+          );
+        }
+
         // Validate
         if (examData.questions.length === 0) {
           throw new Error('Đề thi phải có ít nhất 1 câu hỏi');
@@ -531,6 +583,9 @@ export class ExamService {
           }
         }
 
+        // Kiểm tra xem đã có mã đề chưa
+        const hasCodes = await this.hasExamCodes(id);
+        
         // Xóa tất cả câu hỏi cũ
         await query('DELETE FROM exam_questions WHERE exam_id = ?', [id]);
 
@@ -541,6 +596,11 @@ export class ExamService {
             'INSERT INTO exam_questions (exam_id, question_id, score, order_index) VALUES (?, ?, ?, ?)',
             [id, examQuestion.questionId, examQuestion.score, i + 1]
           );
+        }
+
+        // Nếu đã có mã đề, xóa tất cả mã đề cũ (vì câu hỏi đã thay đổi)
+        if (hasCodes) {
+          await query('DELETE FROM exam_codes WHERE exam_id = ?', [id]);
         }
       }
 

@@ -262,7 +262,7 @@ export class QuestionController {
       console.error('Delete question error:', error);
       res.status(500).json({
         success: false,
-        message: 'Lỗi server khi xóa câu hỏi',
+        message: error.message || 'Lỗi server khi xóa câu hỏi',
         error: error.message
       });
     }

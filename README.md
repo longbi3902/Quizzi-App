@@ -7,10 +7,11 @@
 3. [Tính Năng Chính](#tính-năng-chính)
 4. [Logic Cá Nhân Hóa](#logic-cá-nhân-hóa-data-isolation)
 5. [Luồng Nghiệp Vụ](#luồng-nghiệp-vụ)
-6. [Cấu Trúc Database](#cấu-trúc-database)
-7. [API Endpoints](#api-endpoints)
-8. [Cài Đặt và Chạy](#cài-đặt-và-chạy)
-9. [Cấu Trúc Dự Án](#cấu-trúc-dự-án)
+6. [Ràng Buộc Nghiệp Vụ](#-ràng-buộc-nghiệp-vụ)
+7. [Cấu Trúc Database](#cấu-trúc-database)
+8. [API Endpoints](#api-endpoints)
+9. [Cài Đặt và Chạy](#cài-đặt-và-chạy)
+10. [Cấu Trúc Dự Án](#cấu-trúc-dự-án)
 
 ---
 
@@ -64,6 +65,7 @@
 - ✅ Upload ảnh cho câu hỏi (không bắt buộc)
 - ✅ Phân trang danh sách câu hỏi
 - ✅ Tìm kiếm và lọc theo nội dung câu hỏi, môn học, khối lớp (1-12), độ khó (Nhận biết, Thông hiểu, Vận dụng, Vận dụng cao)
+- ✅ **Ràng buộc nghiệp vụ**: Không cho phép xóa câu hỏi nếu câu hỏi đó đã được thêm vào đề thi (đảm bảo tính nhất quán của đề thi)
 
 ### 3. Quản Lý Đề Thi (Teacher)
 - ✅ **Tạo đề thi tự chọn**: Chọn từng câu hỏi và gán điểm
@@ -75,6 +77,11 @@
 - ✅ **Mã đề thi**: Tạo nhiều mã đề cho một đề thi (đảo thứ tự câu hỏi)
 - ✅ Phân trang danh sách đề thi
 - ✅ Tìm kiếm theo tên đề thi
+- ✅ **Ràng buộc nghiệp vụ khi chỉnh sửa đề thi**:
+  - **Nếu đã có học sinh làm bài**: Không cho phép thêm/xóa câu hỏi (chỉ cho sửa tên, thời gian, điểm số) để đảm bảo tính nhất quán của kết quả
+  - **Nếu chưa có học sinh làm bài nhưng đã có mã đề**: Cho phép sửa câu hỏi, hệ thống tự động xóa tất cả mã đề cũ (vì câu hỏi đã thay đổi)
+  - **Nếu chưa có mã đề**: Cho phép sửa tự do
+  - **Cảnh báo sớm**: Frontend hiển thị cảnh báo và disable nút thêm/xóa câu hỏi khi đã có học sinh làm bài
 
 ### 4. Quản Lý Lớp Học (Teacher)
 - ✅ **CRUD lớp học**: Tạo, xem, sửa, xóa
@@ -308,6 +315,8 @@ Hệ thống đảm bảo mỗi người dùng chỉ có thể xem và thao tác
    - Đánh dấu ít nhất 1 đáp án đúng
 4. Lưu câu hỏi
 5. Có thể sửa/xóa câu hỏi sau đó
+6. **Ràng buộc**: Không thể xóa câu hỏi nếu câu hỏi đó đã được thêm vào đề thi
+   - Hệ thống sẽ báo lỗi: "Câu hỏi này đã được thêm vào đề thi, không thể xóa"
 ```
 
 #### 2. Tạo Đề Thi
@@ -332,6 +341,29 @@ Hệ thống đảm bảo mỗi người dùng chỉ có thể xem và thao tác
    - Chọn số mã đề (nếu muốn tạo nhiều mã đề)
    - Hệ thống tự động chọn câu hỏi ngẫu nhiên
    - Lưu đề thi
+```
+
+#### 2.1. Chỉnh Sửa Đề Thi
+```
+1. Vào "Quản lý đề thi" > Chọn đề thi cần sửa
+2. Hệ thống kiểm tra trạng thái đề thi:
+   
+   Trường hợp 1: Đã có học sinh làm bài
+   - Hiển thị cảnh báo màu vàng: "Đề thi này đã có học sinh làm bài"
+   - Không cho phép thêm/xóa câu hỏi (nút bị disable)
+   - Chỉ cho phép sửa: tên đề thi, thời gian thi, tổng điểm
+   - Nếu cố gắng sửa câu hỏi → Báo lỗi: "Đề thi này đã có học sinh làm bài. 
+     Không thể thêm hoặc xóa câu hỏi để đảm bảo tính nhất quán của kết quả."
+   
+   Trường hợp 2: Chưa có học sinh làm bài nhưng đã có mã đề
+   - Hiển thị cảnh báo màu xanh: "Đề thi này đã có mã đề. Nếu bạn thêm hoặc xóa 
+     câu hỏi, tất cả mã đề sẽ bị xóa và cần tạo lại."
+   - Cho phép sửa câu hỏi
+   - Sau khi sửa → Hệ thống tự động xóa tất cả mã đề cũ
+   
+   Trường hợp 3: Chưa có mã đề
+   - Cho phép sửa tự do, không có cảnh báo
+3. Lưu thay đổi
 ```
 
 #### 3. Tạo Lớp Học
@@ -418,6 +450,91 @@ Hệ thống đảm bảo mỗi người dùng chỉ có thể xem và thao tác
    - Đáp án đã chọn
    - Đáp án đúng (nếu đã hết thời gian thi)
 ```
+
+---
+
+## ⚠️ Ràng Buộc Nghiệp Vụ
+
+Hệ thống có các ràng buộc nghiệp vụ quan trọng để đảm bảo tính nhất quán và toàn vẹn dữ liệu:
+
+### 1. Ràng Buộc Xóa Câu Hỏi
+
+**Quy tắc**: Không cho phép xóa câu hỏi nếu câu hỏi đó đã được thêm vào đề thi.
+
+**Lý do**: 
+- Đảm bảo tính nhất quán của đề thi
+- Tránh mất dữ liệu khi đề thi đang được sử dụng
+- Bảo vệ tính toàn vẹn của kết quả thi
+
+**Cách hoạt động**:
+- Khi giáo viên cố gắng xóa câu hỏi, hệ thống kiểm tra xem câu hỏi có trong bảng `exam_questions` không
+- Nếu có → Báo lỗi: "Câu hỏi này đã được thêm vào đề thi, không thể xóa"
+- Nếu không → Cho phép xóa
+
+**Ví dụ**:
+```
+1. Giáo viên tạo câu hỏi A
+2. Giáo viên tạo đề thi và thêm câu hỏi A vào đề thi
+3. Giáo viên cố gắng xóa câu hỏi A
+4. Hệ thống báo lỗi và không cho phép xóa
+```
+
+### 2. Ràng Buộc Chỉnh Sửa Đề Thi
+
+**Quy tắc**: Không cho phép thêm/xóa câu hỏi trong đề thi nếu đã có học sinh làm bài.
+
+**Lý do**:
+- Đảm bảo tính nhất quán của kết quả thi
+- Tránh ảnh hưởng đến kết quả đã được lưu
+- Bảo vệ tính công bằng trong đánh giá
+
+**Các trường hợp xử lý**:
+
+#### Trường hợp 1: Đã có học sinh làm bài
+- **Hành động**: Không cho phép thêm/xóa câu hỏi
+- **Cho phép**: Chỉ sửa tên đề thi, thời gian thi, tổng điểm
+- **Cảnh báo**: Frontend hiển thị cảnh báo màu vàng và disable nút thêm/xóa
+- **Lỗi nếu cố gắng sửa**: "Đề thi này đã có học sinh làm bài. Không thể thêm hoặc xóa câu hỏi để đảm bảo tính nhất quán của kết quả."
+
+#### Trường hợp 2: Chưa có học sinh làm bài nhưng đã có mã đề
+- **Hành động**: Cho phép sửa câu hỏi
+- **Xử lý tự động**: Sau khi sửa, hệ thống tự động xóa tất cả mã đề cũ (vì câu hỏi đã thay đổi)
+- **Cảnh báo**: Frontend hiển thị cảnh báo màu xanh thông báo mã đề sẽ bị xóa
+- **Lý do**: Mã đề lưu thứ tự câu hỏi (JSON array), nếu câu hỏi thay đổi thì mã đề không còn chính xác
+
+#### Trường hợp 3: Chưa có mã đề
+- **Hành động**: Cho phép sửa tự do, không có ràng buộc
+
+**Ví dụ**:
+```
+1. Giáo viên tạo đề thi với 10 câu hỏi
+2. Giáo viên tạo 5 mã đề cho đề thi này
+3. Học sinh A làm bài với mã đề MĐ001
+4. Giáo viên cố gắng xóa 1 câu hỏi
+   → Hệ thống báo lỗi: "Đề thi này đã có học sinh làm bài..."
+5. Giáo viên chỉ có thể sửa tên, thời gian, điểm số
+```
+
+### 3. Kiểm Tra Trạng Thái Đề Thi
+
+Hệ thống cung cấp endpoint để kiểm tra trạng thái đề thi:
+- `GET /api/exams/:id/status` - Trả về:
+  - `hasExamCodes`: Đề thi đã có mã đề chưa
+  - `hasExamResults`: Đề thi đã có học sinh làm bài chưa
+
+Frontend sử dụng thông tin này để:
+- Hiển thị cảnh báo phù hợp
+- Disable/enable các nút thao tác
+- Hướng dẫn người dùng
+
+### 4. Tự Động Xử Lý Mã Đề
+
+Khi giáo viên sửa câu hỏi trong đề thi (thêm/xóa):
+- Nếu đã có mã đề → Hệ thống tự động xóa tất cả mã đề cũ
+- Lý do: Mã đề lưu thứ tự câu hỏi, nếu câu hỏi thay đổi thì mã đề không còn chính xác
+- Giáo viên cần tạo lại mã đề sau khi sửa (nếu cần)
+
+**Lưu ý**: Chỉ xóa mã đề khi chưa có học sinh làm bài. Nếu đã có học sinh làm bài, hệ thống không cho phép sửa câu hỏi.
 
 ---
 
@@ -583,9 +700,11 @@ exam_codes (1) ──< exam_results (N)
 ### Exams (Teacher only)
 - `GET /api/exams?page=1&limit=10&name=...` - Lấy danh sách đề thi (có tìm kiếm theo tên và pagination)
 - `GET /api/exams/:id` - Lấy chi tiết đề thi
+- `GET /api/exams/:id/status` - Lấy trạng thái đề thi (có mã đề chưa, có học sinh làm bài chưa)
 - `POST /api/exams` - Tạo đề thi (tự chọn câu hỏi)
 - `POST /api/exams/random` - Tạo đề thi random
-- `PUT /api/exams/:id` - Cập nhật đề thi
+- `PUT /api/exams/:id` - Cập nhật đề thi (chỉ thông tin cơ bản: tên, thời gian, điểm số)
+- `PUT /api/exams/:id/questions` - Cập nhật đề thi kèm câu hỏi (có kiểm tra ràng buộc nghiệp vụ)
 - `DELETE /api/exams/:id` - Xóa đề thi
 
 ### Exam Codes (Teacher only)

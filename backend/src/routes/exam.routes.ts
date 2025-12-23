@@ -35,6 +35,24 @@ router.get('/:id', examController.getExamById.bind(examController));
 
 /**
  * @swagger
+ * /api/exams/{id}/status:
+ *   get:
+ *     summary: Lấy trạng thái đề thi (có mã đề chưa, có học sinh làm bài chưa)
+ *     tags: [Exams]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Lấy trạng thái đề thi thành công
+ */
+router.get('/:id/status', examController.getExamStatus.bind(examController));
+
+/**
+ * @swagger
  * /api/exams:
  *   post:
  *     summary: Tạo đề thi tự chọn

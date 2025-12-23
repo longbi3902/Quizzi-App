@@ -360,6 +360,16 @@ export class QuestionService {
         }
       }
       
+      // Kiểm tra xem câu hỏi có đang được sử dụng trong đề thi không
+      const examQuestions = await query<{ id: number }[]>(
+        'SELECT id FROM exam_questions WHERE question_id = ? LIMIT 1',
+        [id]
+      );
+      
+      if (examQuestions.length > 0) {
+        throw new Error('Câu hỏi này đã được thêm vào đề thi, không thể xóa');
+      }
+      
       let queryStr = 'DELETE FROM questions WHERE id = ?';
       const params: any[] = [id];
       

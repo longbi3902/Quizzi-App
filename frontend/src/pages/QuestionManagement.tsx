@@ -129,6 +129,7 @@ const QuestionManagement: React.FC = () => {
     if (!questionToDelete) return;
 
     try {
+      setError(''); // Clear error trước khi thử xóa
       const response = await apiClient.delete(`${API_ENDPOINTS.QUESTIONS}/${questionToDelete}`);
 
       const data = await response.json();
@@ -143,6 +144,8 @@ const QuestionManagement: React.FC = () => {
       setQuestionToDelete(null);
     } catch (err: any) {
       setError(err.message || 'Xóa câu hỏi thất bại');
+      // Đóng dialog để người dùng thấy Alert trên trang
+      setDeleteDialogOpen(false);
     }
   };
 
